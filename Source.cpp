@@ -44,7 +44,7 @@ private:
 	UINT32 bufferPos = 0;
 	static const unsigned int sampleCount = 96000 * 5;
 	float frequency = 440;
-	float* pcmAudio = nullptr;
+	std::vector<std::vector<float>> pcmAudio;
 };
 
 //-----------------------------------------------------------
@@ -57,14 +57,11 @@ MyAudioSource::MyAudioSource()
 
 MyAudioSource::~MyAudioSource()
 {
-	if (pcmAudio)
-	{
-		delete[] pcmAudio;
-	}
+	pcmAudio.clear();
 }
 //-----------------------------------------------------------
 
-void MyAudioSource::init(WAV_HEADER *wavHeader)
+void MyAudioSource::init(WAV_HEADER* wavHeader)
 {
 	pcmAudio = wavHeader->pFloatdata;
 	//pcmAudio = new float[sampleCount];
@@ -116,7 +113,7 @@ HRESULT MyAudioSource::SetFormat(WAVEFORMATEX* wfex)
 	}
 	return 0;
 }
-HRESULT MyAudioSource::LoadData(UINT32 totalFrames, BYTE* dataOut, DWORD* flags, WAV_HEADER *wavHeader)
+HRESULT MyAudioSource::LoadData(UINT32 totalFrames, BYTE* dataOut, DWORD* flags, WAV_HEADER* wavHeader)
 {
 	float* fData = (float*)dataOut;
 	UINT32 totalSamples = totalFrames * format.Format.nChannels;
@@ -140,22 +137,14 @@ HRESULT MyAudioSource::LoadData(UINT32 totalFrames, BYTE* dataOut, DWORD* flags,
 	//}
 	if (pcmPos < sampleCount)
 	{
-		// for (UINT32 i = 0; i < totalSamples; i += format.Format.nChannels)
-		
-		for (UINT32 i = 0; i < 2000; i += format.Format.nChannels)
+		for (UINT32 i = 0; i < totalSamples; i += format.Format.nChannels)
 		{
 			// This is writing to both channels
 			for (size_t chan = 0; chan < format.Format.nChannels; chan++)
 			{
-				fData[i + chan] = (pcmPos < sampleCount) ? pcmAudio[pcmPos] : 0.0f;
-				fData[i + chan] = pcmAudio[pcmPos];
-
+				fData[i + chan] = (pcmPos < sampleCount) ? pcmAudio[chan][pcmPos] : 0.0f;
 			}
-			std::cout << "Sample - " << pcmAudio[pcmPos] << std::endl;
-
-			// std::cout << "Sample - " << pcmAudio[pcmPos] << std::endl;
-			//fData[i] = (pcmPos < sampleCount) ? pcmAudio[pcmPos] : 0.0f;
-
+			// std::cout << "Sample - " << fData[i] << std::endl;
 			pcmPos++;
 		}
 		bufferPos += totalSamples;
@@ -218,7 +207,7 @@ HRESULT PlayAudioStream(MyAudioSource* pMySource, WAV_HEADER* wavHeader)
 		(void**)&pEnumerator);
 	EXIT_ON_ERROR(hr)
 
-	std::cout << "Created COM instance successfully..." << std::endl;
+		std::cout << "Created COM instance successfully..." << std::endl;
 	hr = pEnumerator->GetDefaultAudioEndpoint(
 		eRender, eMultimedia, &pDevice);
 	EXIT_ON_ERROR(hr)
@@ -232,13 +221,13 @@ HRESULT PlayAudioStream(MyAudioSource* pMySource, WAV_HEADER* wavHeader)
 	EXIT_ON_ERROR(hr)
 		std::cout << "Got mix format: " << pwfx->wFormatTag << std::endl;
 
-		hr = pAudioClient->Initialize(
-			AUDCLNT_SHAREMODE_SHARED,
-			0,
-			hnsRequestedDuration,
-			0,
-			pwfx,
-			NULL);
+	hr = pAudioClient->Initialize(
+		AUDCLNT_SHAREMODE_SHARED,
+		0,
+		hnsRequestedDuration,
+		0,
+		pwfx,
+		NULL);
 	EXIT_ON_ERROR(hr)
 
 		// Tell the audio source which format to use.
@@ -258,18 +247,9 @@ HRESULT PlayAudioStream(MyAudioSource* pMySource, WAV_HEADER* wavHeader)
 		hr = pRenderClient->GetBuffer(bufferFrameCount, &pData);
 	EXIT_ON_ERROR(hr)
 
-
-
-
-
 		// Load the initial data into the shared buffer.
 		hr = pMySource->LoadData(bufferFrameCount, pData, &flags, wavHeader);
 	std::cout << "got done loading data" << std::endl;
-
-
-
-
-
 
 	EXIT_ON_ERROR(hr)
 		hr = pRenderClient->ReleaseBuffer(bufferFrameCount, flags);

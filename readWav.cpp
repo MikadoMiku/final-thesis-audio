@@ -19,24 +19,45 @@ void swap_endian32(uint32_t val) {
 		((val >> 8) & 0x0000ff00) | (val >> 24);
 }
 
-int readFile(WAV_HEADER *wavHeader)
+int readFile(WAV_HEADER* wavHeader)
 {
 
 	AudioFile<double> audioFile;
-	wavHeader->pFloatdata = new float[4096];
 
-	audioFile.load("C:/Users/power/Downloads/misha.wav");
+	audioFile.load("C:/Users/power/Downloads/mil.wav");
 
 	int channel = 0;
 	int numSamples = audioFile.getNumSamplesPerChannel();
 
+	wavHeader->pFloatdata.resize(2);
+	wavHeader->pFloatdata[0].resize(numSamples);
+	wavHeader->pFloatdata[1].resize(numSamples);
 
-
-	for (int i = 6000; i < 10000; i++)
-	{
-		double currentSample = audioFile.samples[channel][i];
-		wavHeader->pFloatdata[i] = currentSample;
+	for (int x = 0; x < numSamples; x++) {
+		for (int y = 0; y < 2; y++) {
+			wavHeader->pFloatdata[y][x] = audioFile.samples[y][x];
+		}
 	}
+
+	for (int i = 100000; i < 100010; i++) {
+		std::cout << wavHeader->pFloatdata[1][i] << std::endl;
+		if (i == 100009) {
+			std::cout << "CHANNEL SWITCH" << std::endl;
+		}
+	}
+
+	for (int i = 100000; i < 100010; i++) {
+		std::cout << wavHeader->pFloatdata[0][i] << std::endl;
+	}
+
+	// typedef std::vector<std::vector<T> > AudioBuffer;
+	//for (int i = 100000; i < 104000; i++)
+	//{
+	//	double currentSample = audioFile.samples[1][i];
+	//	float currFloatSample = (float)currentSample;
+	//	std::cout << currentSample << std::endl;
+	//	wavHeader->pFloatdata[i] = currentSample;
+	//}
 
 
 	return 0;

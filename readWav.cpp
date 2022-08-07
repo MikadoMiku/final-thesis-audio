@@ -28,7 +28,7 @@ int readFile(WAV_HEADER* wavHeader)
 
 	int channel = 0;
 	int numSamples = audioFile.getNumSamplesPerChannel();
-
+	audioFile.printSummary();
 	wavHeader->pFloatdata.resize(2);
 	wavHeader->pFloatdata[0].resize(numSamples);
 	wavHeader->pFloatdata[1].resize(numSamples);
@@ -39,16 +39,17 @@ int readFile(WAV_HEADER* wavHeader)
 		}
 	}
 
-	for (int i = 100000; i < 100010; i++) {
-		std::cout << wavHeader->pFloatdata[1][i] << std::endl;
-		if (i == 100009) {
-			std::cout << "CHANNEL SWITCH" << std::endl;
-		}
-	}
+	std::cout << wavHeader->pFloatdata[0][614000] << std::endl;
+	//for (int i = 100000; i < 100010; i++) {
+	//	std::cout << wavHeader->pFloatdata[1][i] << std::endl;
+	//	if (i == 100009) {
+	//		std::cout << "CHANNEL SWITCH" << std::endl;
+	//	}
+	//}
 
-	for (int i = 100000; i < 100010; i++) {
-		std::cout << wavHeader->pFloatdata[0][i] << std::endl;
-	}
+	//for (int i = 100000; i < 100010; i++) {
+	//	std::cout << wavHeader->pFloatdata[0][i] << std::endl;
+	//}
 
 	// typedef std::vector<std::vector<T> > AudioBuffer;
 	//for (int i = 100000; i < 104000; i++)

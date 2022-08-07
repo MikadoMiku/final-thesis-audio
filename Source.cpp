@@ -24,11 +24,6 @@ class MyAudioSource
 public:
 	// empty constructor
 	MyAudioSource();
-	// constructor overload with freq argument
-	MyAudioSource(float freq)
-	{
-		frequency = freq;
-	};
 	// ~ tilde means its a destructor and runs when the instance of the object gets destroyed
 	~MyAudioSource();
 
@@ -42,8 +37,6 @@ private:
 	unsigned int pcmPos = 0;
 	UINT32 bufferSize;
 	UINT32 bufferPos = 0;
-	static const unsigned int sampleCount = 96000 * 5;
-	float frequency = 440;
 	std::vector<std::vector<float>> pcmAudio;
 };
 
@@ -64,18 +57,6 @@ MyAudioSource::~MyAudioSource()
 void MyAudioSource::init(WAV_HEADER* wavHeader)
 {
 	pcmAudio = wavHeader->pFloatdata;
-	//pcmAudio = new float[sampleCount];
-	//const float radsPerSec = 2 * 3.1415926536 * frequency / (float)format.Format.nSamplesPerSec;
-	//for (unsigned long i = 0; i < sampleCount; i++)
-	//{
-	//	// float sampleValue = sin(radsPerSec * (float)i);
-	//	float sampleValue = sin((2 * 3.14 * i * frequency) / 126000) * 0.25;
-	//	pcmAudio[i] = sampleValue;
-	//}
-	for (unsigned long i = 0; i < 100; i++)
-	{
-		// std::cout << pcmAudio[i] << std::endl;
-	}
 	initialised = true;
 	std::cout << "initialized the audio source..." << std::endl;
 }
@@ -135,20 +116,19 @@ HRESULT MyAudioSource::LoadData(UINT32 totalFrames, BYTE* dataOut, DWORD* flags,
 	//	std::cout << "buffer address: " << int(dataOut) << '\n';
 
 	//}
-	if (pcmPos < sampleCount)
+	if (pcmPos < pcmAudio[0].size())
 	{
+		std::cout << "Starting loading data: " << totalSamples << " | " << pcmPos << std::endl;
 		for (UINT32 i = 0; i < totalSamples; i += format.Format.nChannels)
 		{
 			// This is writing to both channels
 			for (size_t chan = 0; chan < format.Format.nChannels; chan++)
 			{
-				fData[i + chan] = (pcmPos < sampleCount) ? pcmAudio[chan][pcmPos] : 0.0f;
+				fData[i + chan] = (pcmPos < pcmAudio[0].size()) ? pcmAudio[chan][pcmPos] : 0.0f;
 			}
 			// std::cout << "Sample - " << fData[i] << std::endl;
 			pcmPos++;
 		}
-		bufferPos += totalSamples;
-		// bufferPos %= totalSamples;
 	}
 	else
 	{

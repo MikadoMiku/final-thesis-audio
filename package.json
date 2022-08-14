@@ -1,0 +1,26 @@
+{
+    "name": "sss",
+    "version": "0.0.1",
+    "description": "testing c++ addons for javascript",
+    "main": "index.js",
+    "author": "Mihkel Riik",
+    "license": "MIT",
+    "private": true,
+    "gypfile": true,
+    "scripts": {
+        "preinstall": "npm i node-addon-api",
+        "dev": "rimraf ./build && node-gyp configure && node-gyp build && node index.js"
+    },
+    "files": [
+        "src/**/*",
+        "binding.gyp"
+    ],
+    "dependencies": {
+        "bindings": "^1.5.0",
+        "node-addon-api": "^5.0.0",
+        "rimraf": "^3.0.2"
+    },
+    "devDependencies": {
+        "node-gyp": "^9.0.0"
+    }
+}

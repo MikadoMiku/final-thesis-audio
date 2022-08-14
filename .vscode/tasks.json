@@ -1,0 +1,63 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "Build with GCC 11.3.0",
+            "command": "C:\\mingw64\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-std=c++20",
+                "${workspaceFolder}\\getAudioEndpoints.cpp",
+                "-o",
+                "-fPermissive",
+                "${fileDirname}\\rooster.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": ["$gcc"],
+            "group": "build",
+            "detail": "compiler: C:\\mingw64\\bin\\g++.exe"
+        },
+        {
+            "type": "cppbuild",
+            "label": "Build with Clang 14.0.3",
+            "command": "C:\\mingw64\\bin\\clang++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-std=c++20",
+                "${workspaceFolder}\\getAudioEndpoints.cpp",
+                "-o",
+                "${fileDirname}\\rooster.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": ["$gcc"],
+            "group": "build",
+            "detail": "compiler: C:\\mingw64\\bin\\clang++.exe"
+        },
+        {
+            "type": "cppbuild",
+            "label": "Build with MSVC",
+            "command": "cl.exe",
+            "args": [
+                "/Zi",
+                "/EHsc",
+                "/std:c++latest",
+                "/Fe:",
+                "${fileDirname}\\rooster.exe",
+                "${workspaceFolder}\\realDeal.cpp"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": ["$msCompile"],
+            "group": "build",
+            "detail": "compiler: cl.exe"
+        }
+    ]
+}

@@ -16,7 +16,7 @@
 // WASAPI
 #include <Audioclient.h>
 #include "readWavHeader.h"
-
+#include <Functiondiscoverykeys_devpkey.h>
 
 
 class MyAudioSource
@@ -106,7 +106,7 @@ HRESULT MyAudioSource::LoadData(UINT32 totalFrames, BYTE* dataOut, DWORD* flags,
 		std::cout << "sampsPerChan: " << totalFrames / format.Format.nChannels << '\n';
 		std::cout << "fData[totalSamples]: " << fData[totalFrames] << '\n';
 		std::cout << "fData[bufferSize]: " << fData[bufferSize] << '\n';
-		std::cout << "buffer address: " << int(dataOut) << '\n';
+		// std::cout << "buffer address: " << long(dataOut) << '\n';
 	}
 	//else
 	//{
@@ -179,7 +179,11 @@ HRESULT PlayAudioStream(MyAudioSource* pMySource, WAV_HEADER* wavHeader)
 	UINT32 numFramesPadding;
 	BYTE* pData;
 	DWORD flags = 0;
-	IMMDeviceCollection* pCollection = NULL;
+	// Reading all endpoints
+	IMMDeviceCollection* pEndpointsCollection = NULL;
+	IMMDevice* pEndpoint = NULL;
+	LPWSTR pwszID = NULL;
+	IPropertyStore* pProps = NULL;
 
 	hr = CoCreateInstance(
 		CLSID_MMDeviceEnumerator, NULL,
@@ -187,15 +191,63 @@ HRESULT PlayAudioStream(MyAudioSource* pMySource, WAV_HEADER* wavHeader)
 		(void**)&pEnumerator);
 	EXIT_ON_ERROR(hr)
 
-		std::cout << "Created COM instance successfully..." << std::endl;
-	hr = pEnumerator->GetDefaultAudioEndpoint(
-		eRender, eMultimedia, &pDevice);
+		// GETTING THE DEFAULT AUDIO ENDPOINT DEVICE
+		hr = pEnumerator->GetDefaultAudioEndpoint(
+			eRender, eMultimedia, &pDevice);
 	EXIT_ON_ERROR(hr)
 		hr = pDevice->Activate(
 			IID_IAudioClient, CLSCTX_ALL,
 			NULL, (void**)&pAudioClient);
 	EXIT_ON_ERROR(hr)
+		/* ---------------------------------------------------- THIS IS THE CUSTOM START ---------------------------------------------------------*/
+		// Get all endpoint devices
+		hr = pEnumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &pEndpointsCollection);
+	EXIT_ON_ERROR(hr)
+	UINT count;
+	hr = pEndpointsCollection->GetCount(&count);
+	EXIT_ON_ERROR(hr)
+		if (count == 0)
+		{
+			printf("No endpoints found.\n");
+		}
 
+	// Each loop prints the name of an endpoint device.
+	for (ULONG i = 0; i < count; i++)
+	{
+		// Get pointer to endpoint number i.
+		hr = pEndpointsCollection->Item(i, &pEndpoint);
+		EXIT_ON_ERROR(hr)
+
+			// Get the endpoint ID string.
+			hr = pEndpoint->GetId(&pwszID);
+		EXIT_ON_ERROR(hr)
+
+			hr = pEndpoint->OpenPropertyStore(
+				STGM_READ, &pProps);
+		EXIT_ON_ERROR(hr)
+
+			PROPVARIANT varName;
+		// Initialize container for property value.
+		PropVariantInit(&varName);
+
+		// Get the endpoint's friendly-name property.
+		hr = pProps->GetValue(
+			PKEY_Device_FriendlyName, &varName);
+		EXIT_ON_ERROR(hr)
+
+			// Print endpoint friendly name and endpoint ID.
+			printf("Endpoint %d: \"%S\" (%S)\n",
+				i, varName.pwszVal, pwszID);
+
+		CoTaskMemFree(pwszID);
+		pwszID = NULL;
+		PropVariantClear(&varName);
+		SAFE_RELEASE(pProps)
+			SAFE_RELEASE(pEndpoint)
+	}
+	SAFE_RELEASE(pEnumerator)
+		SAFE_RELEASE(pEndpointsCollection)
+		/* ---------------------------------------------------- THIS IS THE CUSTOM STOP   ---------------------------------------------------------*/
 		// The GetMixFormat method retrieves the stream format that the audio engine uses for its internal processing of shared-mode streams.
 		hr = pAudioClient->GetMixFormat(&pwfx);
 	EXIT_ON_ERROR(hr)

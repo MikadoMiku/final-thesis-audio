@@ -20,6 +20,8 @@
     }
 
 // Convert a wide Unicode string to an UTF8 string
+// https://technoteshelp.com/c-how-do-you-properly-use-widechartomultibyte/
+// I noticed in node api github that Value::From should be able to accept UTF-16 encodings????? why not work
 std::string utf8_encode(const std::wstring &wstr)
 {
     if (wstr.empty())

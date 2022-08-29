@@ -10,16 +10,18 @@ using std::endl;
 using std::fstream;
 using std::string;
 
-void swap_endian16(uint16_t val) {
+void swap_endian16(uint16_t val)
+{
 	val = (val << 8) | (val >> 8);
 }
 
-void swap_endian32(uint32_t val) {
+void swap_endian32(uint32_t val)
+{
 	val = (val << 24) | ((val << 8) & 0x00ff0000) |
-		((val >> 8) & 0x0000ff00) | (val >> 24);
+		  ((val >> 8) & 0x0000ff00) | (val >> 24);
 }
 
-int readFile(WAV_HEADER* wavHeader)
+int readFile(WAV_HEADER *wavHeader)
 {
 
 	AudioFile<double> audioFile;
@@ -28,22 +30,28 @@ int readFile(WAV_HEADER* wavHeader)
 
 	int channel = 0;
 	int numSamples = audioFile.getNumSamplesPerChannel();
-	audioFile.printSummary();
 	wavHeader->pFloatdata.resize(2);
 	wavHeader->pFloatdata[0].resize(numSamples);
 	wavHeader->pFloatdata[1].resize(numSamples);
 
-	for (int x = 0; x < numSamples; x++) {
-		for (int y = 0; y < 2; y++) {
+	for (int x = 0; x < numSamples; x++)
+	{
+		for (int y = 0; y < 2; y++)
+		{
 			wavHeader->pFloatdata[y][x] = audioFile.samples[y][x];
 		}
+	}
+
+	for (size_t i = 0; i < audioFile.samples.size(); i++)
+	{
+		audioFile.samples[i].clear();
 	}
 
 	return 0;
 }
 
 // find the file size
-int getFileSize(FILE* inFile)
+int getFileSize(FILE *inFile)
 {
 	int fileSize = 0;
 	fseek(inFile, 0, SEEK_END);

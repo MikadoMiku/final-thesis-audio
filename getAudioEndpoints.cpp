@@ -6,6 +6,8 @@
 #include <Functiondiscoverykeys_devpkey.h>
 #include <map>
 
+#include "audioPlayer.h"
+
 #define EXIT_ON_ERROR(hres)                \
     if (FAILED(hres))                      \
     {                                      \
@@ -32,12 +34,15 @@ std::string utf8_encode(const std::wstring &wstr)
     return strTo;
 }
 
-/* Each COM class is identified by a CLSID, a unique 128-bit GUID, which the server must register.
-COM uses this CLSID, at the request of a client, to associate specific data with the DLL or EXE containing the code that implements the class,
- thus creating an instance of the object. */
-const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
-// IID - Describes a GUID structure used to describe an identifier for a MAPI interface. --> https://docs.microsoft.com/en-us/office/client-developer/outlook/mapi/iid
-const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
+namespace audEndpointsComs
+{
+    /* Each COM class is identified by a CLSID, a unique 128-bit GUID, which the server must register.
+    COM uses this CLSID, at the request of a client, to associate specific data with the DLL or EXE containing the code that implements the class,
+     thus creating an instance of the object. */
+    const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
+    // IID - Describes a GUID structure used to describe an identifier for a MAPI interface. --> https://docs.microsoft.com/en-us/office/client-developer/outlook/mapi/iid
+    const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
+}
 
 std::map<int, char> endpointMap;
 
@@ -59,8 +64,8 @@ Napi::Value getAudioEndpoints(const Napi::CallbackInfo &info)
     IPropertyStore *pProps = NULL;
 
     hr = CoCreateInstance(
-        CLSID_MMDeviceEnumerator, NULL,
-        CLSCTX_ALL, IID_IMMDeviceEnumerator,
+        audEndpointsComs::CLSID_MMDeviceEnumerator, NULL,
+        CLSCTX_ALL, audEndpointsComs::IID_IMMDeviceEnumerator,
         (void **)&pEnumerator);
     EXIT_ON_ERROR(hr)
     // Get all endpoint devices
@@ -132,11 +137,21 @@ Napi::Value getMapSize(const Napi::CallbackInfo &info)
     return Napi::Value::From(env, endpointMap.size());
 }
 
+
+// This should be a worker thread?
+Napi::Value playSong(const Napi::CallbackInfo &info)
+{
+    playSongFromFile();
+    Napi::Env env = info.Env();
+    return Napi::Value::From(env, 0);
+}
+
 // Declare JS functions and map them to native functions
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
     exports.Set(Napi::String::New(env, "getMapSize"), Napi::Function::New(env, getMapSize));
     exports.Set(Napi::String::New(env, "getAudioEndpoints"), Napi::Function::New(env, getAudioEndpoints));
+    exports.Set(Napi::String::New(env, "playSong"), Napi::Function::New(env, playSong));
     return exports;
 }
 

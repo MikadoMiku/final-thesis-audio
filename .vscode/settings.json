@@ -50,6 +50,7 @@
         "sstream": "cpp",
         "fstream": "cpp",
         "iterator": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <Functiondiscoverykeys_devpkey.h>
 #include <map>
+#include <thread>
 
 #include "audioPlayer.h"
 
@@ -20,6 +21,23 @@
         (punk)->Release(); \
         (punk) = NULL;     \
     }
+
+std::thread musicThread;
+// Data structure representing our thread-safe function context.
+struct TsfnContext
+{
+    TsfnContext(Napi::Env env){};
+    std::thread nativeThread;
+};
+
+void ReleaseTSFN();
+std::string ConvertKeyCodeToString(int key_stroke);
+std::string GetLastErrorAsString();
+
+// The thread-safe function finalizer callback. This callback executes
+// at destruction of thread-safe function, taking as arguments the finalizer
+// data and threadsafe-function context.
+void FinalizerCallback(Napi::Env env, void *finalizeData, TsfnContext *context);
 
 // Convert a wide Unicode string to an UTF8 string
 // https://technoteshelp.com/c-how-do-you-properly-use-widechartomultibyte/
@@ -137,13 +155,100 @@ Napi::Value getMapSize(const Napi::CallbackInfo &info)
     return Napi::Value::From(env, endpointMap.size());
 }
 
+Napi::ThreadSafeFunction tsfn;
 
 // This should be a worker thread?
-Napi::Value playSong(const Napi::CallbackInfo &info)
+void playSong(const Napi::CallbackInfo &info)
 {
-    playSongFromFile();
     Napi::Env env = info.Env();
-    return Napi::Value::From(env, 0);
+
+    ReleaseTSFN();
+    // Construct context data
+    auto contextData = new TsfnContext(env);
+
+    // Create a ThreadSafeFunction
+    tsfn = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(), // JavaScript function called asynchronously
+        "musicPlayer",                // Name
+        0,                            // Unlimited queue
+        1,                            // Only one thread will use this initially
+        contextData,                  // Context that can be accessed by Finalizer
+        FinalizerCallback,            // Finalizer used to clean threads up
+        (void *)nullptr               // Finalizer data
+    );
+
+    contextData->nativeThread = std::thread([]
+                                            { playSongFromFile(); });
+}
+
+void FinalizerCallback(Napi::Env env, void *finalizeData, TsfnContext *context)
+{
+    DWORD threadId = GetThreadId(context->nativeThread.native_handle());
+    if (threadId == 0)
+    {
+        std::cerr << "GetThreadId failed: " << GetLastErrorAsString() << std::endl;
+    }
+
+    if (context->nativeThread.joinable())
+    {
+        context->nativeThread.join();
+    }
+    else
+    {
+        std::cerr << "Failed to join nativeThread!" << std::endl;
+    }
+
+    delete context;
+}
+
+std::string GetLastErrorAsString()
+{
+    // Get the error message ID, if any.
+    DWORD errorMessageID = ::GetLastError();
+    if (errorMessageID == 0)
+    {
+        return std::string(); // No error message has been recorded
+    }
+
+    LPSTR messageBuffer = nullptr;
+
+    // Ask Win32 to give us the string version of that message ID.
+    // The parameters we pass in, tell Win32 to create the buffer that holds the
+    // message for us (because we don't yet know how long the message string will
+    // be).
+    size_t size = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0,
+        NULL);
+
+    // Copy the error message into a std::string.
+    std::string message(messageBuffer, size);
+
+    // Free the Win32's string's buffer.
+    LocalFree(messageBuffer);
+
+    return message;
+}
+
+// Release the TSFN
+void ReleaseTSFN()
+{
+    if (tsfn)
+    {
+        napi_status status = tsfn.Release();
+        if (status != napi_ok)
+        {
+            std::cerr << "Failed to release the TSFN!" << std::endl;
+        }
+        tsfn = NULL;
+    }
+}
+
+// Called from JS to release the TSFN and stop listening to keyboard events
+void Stop(const Napi::CallbackInfo &info)
+{
+    ReleaseTSFN();
 }
 
 // Declare JS functions and map them to native functions

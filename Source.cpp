@@ -248,7 +248,7 @@ HRESULT PlayAudioStream(MyAudioSource *pMySource, WAV_HEADER *wavHeader)
 	EXIT_ON_ERROR(hr)
 
 	// Each loop fills about half of the shared buffer.
-	while (flags != AUDCLNT_BUFFERFLAGS_SILENT)
+	while (flags != AUDCLNT_BUFFERFLAGS_SILENT && !stopMusicFlag)
 	{
 		// Sleep for half the buffer duration.
 		Sleep((DWORD)(hnsActualDuration / REFTIMES_PER_MILLISEC / 2));
@@ -271,8 +271,11 @@ HRESULT PlayAudioStream(MyAudioSource *pMySource, WAV_HEADER *wavHeader)
 		EXIT_ON_ERROR(hr)
 	}
 
-	// Wait for last data in buffer to play before stopping.
-	Sleep((DWORD)(hnsActualDuration / REFTIMES_PER_MILLISEC / 2));
+	if (!stopMusicFlag)
+	{
+		// Wait for last data in buffer to play before stopping.
+		Sleep((DWORD)(hnsActualDuration / REFTIMES_PER_MILLISEC / 2));
+	}
 
 	hr = pAudioClient->Stop(); // Stop playing.
 	EXIT_ON_ERROR(hr)

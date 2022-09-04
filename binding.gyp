@@ -11,7 +11,8 @@
             "sources": [
                 "getAudioEndpoints.cpp",
                 "readWav.cpp",
-                "Source.cpp"
+                "Source.cpp",
+                "mouseListener.cpp"
             ],
             "include_dirs": [
                 "<!@(node -p \"require('node-addon-api').include\")",

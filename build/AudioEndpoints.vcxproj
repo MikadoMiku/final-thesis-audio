@@ -146,6 +146,9 @@
     <ClCompile Include="..\Source.cpp">
       <ObjectFileName>$(IntDir)\Source.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\mouseListener.cpp">
+      <ObjectFileName>$(IntDir)\mouseListener.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="C:\Git_repos\final-thesis-audio\node_modules\node-gyp\src\win_delay_load_hook.cc"/>
   </ItemGroup>
   <ItemGroup>

@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "audioPlayer.h"
+#include "mouseListener.h"
 
 #define EXIT_ON_ERROR(hres)                \
     if (FAILED(hres))                      \
@@ -144,9 +145,13 @@ Napi::Value getMapSize(const Napi::CallbackInfo &info)
 
 void stopSong(const Napi::CallbackInfo &info)
 {
-    stopMusicFlag = true;
-    musicThread.join();
-    musicRunning = false;
+    if (musicThread.joinable())
+    {
+
+        stopMusicFlag = true;
+        musicThread.join();
+        musicRunning = false;
+    }
 }
 
 // This should be a worker thread?
@@ -162,6 +167,11 @@ void playSong(const Napi::CallbackInfo &info)
     musicThread = std::thread(playSongFromFile);
 }
 
+void listenToMouseStart(const Napi::CallbackInfo &info)
+{
+    startMouseListener(info);
+}
+
 // Declare JS functions and map them to native functions
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
@@ -169,6 +179,11 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "getAudioEndpoints"), Napi::Function::New(env, getAudioEndpoints));
     exports.Set(Napi::String::New(env, "playSong"), Napi::Function::New(env, playSong));
     exports.Set(Napi::String::New(env, "stopSong"), Napi::Function::New(env, stopSong));
+    exports.Set(Napi::String::New(env, "startMouseListener"), Napi::Function::New(env, listenToMouseStart));
+
+    /*
+        exports.Set(Napi::String::New(env, "start"), Napi::Function::New(env, Start));
+    exports.Set(Napi::String::New(env, "stop"), Napi::Function::New(env, Stop)); */
     return exports;
 }
 

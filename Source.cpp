@@ -11,7 +11,7 @@
 #include <iostream>
 // Windows multimedia device
 #include <Mmdeviceapi.h>
-
+#include <string>
 // WASAPI
 #include <Audioclient.h>
 #include "readWavHeader.h"
@@ -293,6 +293,19 @@ Exit:
 int playSongFromFile()
 {
 	WAV_HEADER wavHeader;
+
+	readFile(&wavHeader);
+	CoInitialize(nullptr);
+	MyAudioSource *audioSrc = new MyAudioSource();
+	PlayAudioStream(audioSrc, &wavHeader);
+	CoUninitialize();
+	return 0;
+}
+
+int playClipFromFile(std::string clipName)
+{
+	WAV_HEADER wavHeader;
+	std::cout << clipName << std::endl;
 
 	readFile(&wavHeader);
 	CoInitialize(nullptr);

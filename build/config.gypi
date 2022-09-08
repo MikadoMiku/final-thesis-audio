@@ -359,6 +359,7 @@
     "ignore_scripts": "",
     "init_license": "MIT",
     "init_version": "1.0.0",
+    "msvs_version": "2022",
     "npmRegistryServer": "https://registry.npmjs.org/",
     "registry": "https://registry.npmjs.org/",
     "save_prefix": "^",

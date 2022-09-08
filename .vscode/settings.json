@@ -52,6 +52,18 @@
         "iterator": "cpp",
         "map": "cpp",
         "xtree": "cpp",
-        "xxatomic": "cpp"
-    }
+        "xxatomic": "cpp",
+        "filesystem": "cpp",
+        "atomic": "cpp",
+        "codecvt": "cpp",
+        "ctime": "cpp",
+        "iomanip": "cpp",
+        "locale": "cpp",
+        "string_view": "cpp",
+        "xlocbuf": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xloctime": "cpp"
+    },
+    "python.formatting.provider": "black"
 }

@@ -6,6 +6,8 @@
 #include <Functiondiscoverykeys_devpkey.h>
 #include <map>
 #include <thread>
+#include <string>
+#include <filesystem>
 
 #include "audioPlayer.h"
 #include "mouseListener.h"
@@ -172,6 +174,29 @@ void listenToMouseStart(const Napi::CallbackInfo &info)
     startMouseListener(info);
 }
 
+void listVoiceQuips(const Napi::CallbackInfo &info)
+{
+    std::string path = "C:/Users/power/Desktop/DEMUT_WAV_CLIPS";
+    const std::filesystem::path fPath = "C:/Users/power/Desktop/DEMUT_WAV_CLIPS";
+    for (auto const &dir_entry : std::filesystem::directory_iterator{fPath})
+    {
+        std::cout << dir_entry.path() << '\n';
+    }
+}
+
+void playClip(const Napi::CallbackInfo &info)
+{
+    std::string clipName = info[0].ToString().Utf8Value();
+    Napi::Env env = info.Env();
+    if (musicRunning)
+    {
+        stopSong(info);
+    }
+    stopMusicFlag = false;
+    musicRunning = true;
+    musicThread = std::thread(playClipFromFile, clipName);
+}
+
 // Declare JS functions and map them to native functions
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
@@ -180,6 +205,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "playSong"), Napi::Function::New(env, playSong));
     exports.Set(Napi::String::New(env, "stopSong"), Napi::Function::New(env, stopSong));
     exports.Set(Napi::String::New(env, "startMouseListener"), Napi::Function::New(env, listenToMouseStart));
+    exports.Set(Napi::String::New(env, "listAudioClips"), Napi::Function::New(env, listVoiceQuips));
+    exports.Set(Napi::String::New(env, "playClip"), Napi::Function::New(env, playClip));
 
     /*
         exports.Set(Napi::String::New(env, "start"), Napi::Function::New(env, Start));

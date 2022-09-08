@@ -21,12 +21,14 @@ void swap_endian32(uint32_t val)
 		  ((val >> 8) & 0x0000ff00) | (val >> 24);
 }
 
-int readFile(WAV_HEADER *wavHeader)
+int readFile(WAV_HEADER *wavHeader, string clipName)
 {
 
 	AudioFile<double> audioFile;
+    std::string path = "C:/Users/power/Desktop/DEMUT_WAV_CLIPS/";
 
-	audioFile.load("C:/Users/power/Downloads/sharks.wav");
+	// audioFile.load("C:/Users/power/Downloads/sharks.wav");
+	audioFile.load(path + clipName + ".wav");
 
 	int channel = 0;
 	int numSamples = audioFile.getNumSamplesPerChannel();

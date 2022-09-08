@@ -294,7 +294,7 @@ int playSongFromFile()
 {
 	WAV_HEADER wavHeader;
 
-	readFile(&wavHeader);
+	readFile(&wavHeader, "sharks");
 	CoInitialize(nullptr);
 	MyAudioSource *audioSrc = new MyAudioSource();
 	PlayAudioStream(audioSrc, &wavHeader);
@@ -307,7 +307,7 @@ int playClipFromFile(std::string clipName)
 	WAV_HEADER wavHeader;
 	std::cout << clipName << std::endl;
 
-	readFile(&wavHeader);
+	readFile(&wavHeader, clipName);
 	CoInitialize(nullptr);
 	MyAudioSource *audioSrc = new MyAudioSource();
 	PlayAudioStream(audioSrc, &wavHeader);
@@ -319,7 +319,7 @@ int main()
 {
 	WAV_HEADER wavHeader;
 
-	readFile(&wavHeader);
+	readFile(&wavHeader, "sharks");
 	CoInitialize(nullptr);
 	std::cout << "Hello world!" << wavHeader.AudioFormat << std::endl;
 	MyAudioSource *audioSrc = new MyAudioSource();

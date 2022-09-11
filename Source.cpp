@@ -190,9 +190,18 @@ HRESULT PlayAudioStream(MyAudioSource *pMySource, WAV_HEADER *wavHeader)
 	EXIT_ON_ERROR(hr)
 
 	// GETTING THE DEFAULT AUDIO ENDPOINT DEVICE
-	hr = pEnumerator->GetDefaultAudioEndpoint(
-		eRender, eMultimedia, &pDevice);
-	EXIT_ON_ERROR(hr)
+	if (audioEndpointId == NULL)
+	{
+
+		hr = pEnumerator->GetDefaultAudioEndpoint(
+			eRender, eMultimedia, &pDevice);
+		EXIT_ON_ERROR(hr)
+	}
+	else
+	{
+		hr = pEnumerator->GetDevice(audioEndpointId, &pDevice);
+		EXIT_ON_ERROR(hr)
+	}
 	hr = pDevice->Activate(
 		IID_IAudioClient, CLSCTX_ALL,
 		NULL, (void **)&pAudioClient);

@@ -53,6 +53,7 @@ namespace audEndpointsComs
 }
 
 std::map<int, char> endpointMap;
+LPCWSTR audioEndpointId = NULL;
 
 Napi::Value getAudioEndpoints(const Napi::CallbackInfo &info)
 {
@@ -117,8 +118,8 @@ Napi::Value getAudioEndpoints(const Napi::CallbackInfo &info)
                i, varName.pwszVal, pwszID);
         std::wstring deviceName = varName.pwszVal;
         // jsObject.Set("DeviceName", Napi::Value::From(env, varName.pwszVal));
-        jsObject.Set(Napi::Value::From(env, utf8_encode(deviceName)), Napi::Value::From(env, i));
-        endpointArray[i] = Napi::Value::From(env, utf8_encode(deviceName));
+        jsObject.Set(Napi::Value::From(env, utf8_encode(deviceName)), Napi::Value::From(env, utf8_encode(pwszID)));
+        // endpointArray[i] = Napi::Value::From(env, utf8_encode(deviceName));
         char intToChar = i;
         endpointMap[i] = intToChar;
         // endpointArray[i] = jsObject;
@@ -135,7 +136,7 @@ Exit:
     SAFE_RELEASE(pEnumerator)
 
     std::cout << "Map size: " << endpointMap.size() << std::endl;
-    return endpointArray;
+    return jsObject;
 }
 
 Napi::Value getMapSize(const Napi::CallbackInfo &info)
@@ -197,6 +198,13 @@ void playClip(const Napi::CallbackInfo &info)
     musicThread = std::thread(playClipFromFile, clipName);
 }
 
+void setAudioEndpointDeviceId(const Napi::CallbackInfo &info)
+{
+    std::string audioEndpointIdString = info[0].ToString().Utf8Value();
+    std::wstring audioEndpointIdWide = std::wstring(audioEndpointIdString.begin(), audioEndpointIdString.end());
+    audioEndpointId = audioEndpointIdWide.c_str();
+}
+
 // Declare JS functions and map them to native functions
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
@@ -207,7 +215,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "startMouseListener"), Napi::Function::New(env, listenToMouseStart));
     exports.Set(Napi::String::New(env, "listAudioClips"), Napi::Function::New(env, listVoiceQuips));
     exports.Set(Napi::String::New(env, "playClip"), Napi::Function::New(env, playClip));
-
+    exports.Set(Napi::String::New(env, "setAudioEndpointDeviceId"), Napi::Function::New(env, setAudioEndpointDeviceId));
     /*
         exports.Set(Napi::String::New(env, "start"), Napi::Function::New(env, Start));
     exports.Set(Napi::String::New(env, "stop"), Napi::Function::New(env, Stop)); */

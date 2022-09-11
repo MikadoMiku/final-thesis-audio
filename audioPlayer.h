@@ -9,3 +9,5 @@ int playSongFromFile();
 int playClipFromFile(std::string clipName);
 
 extern std::atomic<bool> stopMusicFlag;
+
+extern LPCWSTR audioEndpointId;

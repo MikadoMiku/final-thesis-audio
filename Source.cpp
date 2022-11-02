@@ -167,7 +167,7 @@ COM uses this CLSID, at the request of a client, to associate specific data with
 const IID IID_IAudioClient = __uuidof(IAudioClient);
 const IID IID_IAudioRenderClient = __uuidof(IAudioRenderClient);
 
-HRESULT PlayAudioStream(MyAudioSource *pMySource, WAV_HEADER *wavHeader)
+HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 {
 	HRESULT hr;
 	REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC;
@@ -182,6 +182,8 @@ HRESULT PlayAudioStream(MyAudioSource *pMySource, WAV_HEADER *wavHeader)
 	UINT32 numFramesPadding;
 	BYTE *pData;
 	DWORD flags = 0;
+	MyAudioSource* pMySource = new MyAudioSource();
+
 
 	hr = CoCreateInstance(
 		sourceComs::CLSID_MMDeviceEnumerator, NULL,
@@ -305,8 +307,7 @@ int playSongFromFile()
 
 	readFile(&wavHeader, "sharks");
 	CoInitialize(nullptr);
-	MyAudioSource *audioSrc = new MyAudioSource();
-	PlayAudioStream(audioSrc, &wavHeader);
+	PlayAudioStream(&wavHeader);
 	CoUninitialize();
 	return 0;
 }
@@ -318,21 +319,19 @@ int playClipFromFile(std::string clipName)
 
 	readFile(&wavHeader, clipName);
 	CoInitialize(nullptr);
-	MyAudioSource *audioSrc = new MyAudioSource();
-	PlayAudioStream(audioSrc, &wavHeader);
+	PlayAudioStream(&wavHeader);
 	CoUninitialize();
 	return 0;
 }
 
-int main()
-{
-	WAV_HEADER wavHeader;
-
-	readFile(&wavHeader, "sharks");
-	CoInitialize(nullptr);
-	std::cout << "Hello world!" << wavHeader.AudioFormat << std::endl;
-	MyAudioSource *audioSrc = new MyAudioSource();
-	PlayAudioStream(audioSrc, &wavHeader);
-	CoUninitialize();
-	return 0;
-}
+//int main()
+//{
+//	WAV_HEADER wavHeader;
+//
+//	readFile(&wavHeader, "sharks");
+//	CoInitialize(nullptr);
+//	std::cout << "Hello world!" << wavHeader.AudioFormat << std::endl;
+//	PlayAudioStream(&wavHeader);
+//	CoUninitialize();
+//	return 0;
+//}

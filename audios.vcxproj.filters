@@ -21,6 +21,9 @@
     <ClCompile Include="readWav.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextToSpeechKeyboardListener.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\..\..\Downloads\misha.wav">
@@ -34,10 +37,10 @@
     <ClInclude Include="readWavHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Downloads\audioFile.h">
+    <ClInclude Include="customHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="customHeader.h">
+    <ClInclude Include="audioPlayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

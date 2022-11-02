@@ -487,7 +487,7 @@ bool AudioFile<T>::load(std::string filePath)
 
     // allocate
     fileData.resize(length);
-
+    
     file.read(reinterpret_cast<char*> (fileData.data()), length);
     file.close();
 

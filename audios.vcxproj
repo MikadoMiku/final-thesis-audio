@@ -141,15 +141,14 @@
   <ItemGroup>
     <ClCompile Include="readWav.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="TextToSpeechKeyboardListener.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\..\..\Downloads\mil.wav" />
     <Media Include="..\..\..\Downloads\misha.wav" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Downloads\audioFile.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="audioPlayer.h" />
     <ClInclude Include="customHeader.h" />
     <ClInclude Include="readWavHeader.h" />
   </ItemGroup>

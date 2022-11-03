@@ -290,7 +290,7 @@ int main(int argc, char* argv[])
 			cpVoice->SpeakStream(cpStream, SPF_DEFAULT, NULL);
 			*/
 
-			//After SAPI writes the stream, the stream position is at the end, so we need to set it to the beginning.
+		//After SAPI writes the stream, the stream position is at the end, so we need to set it to the beginning.
 		_LARGE_INTEGER a = { 0 };
 		hr = cpStream->Seek(a, STREAM_SEEK_SET, NULL);
 
@@ -312,14 +312,6 @@ int main(int argc, char* argv[])
 		//read the data into the buffer
 		pIstream->Read(reinterpret_cast<char*> (buff.data()), sSize, &bytesRead);
 
-		//uncomment the following to print the contents of the buffer
-		//std::cout << "following data read \n";
-		//for (int i = 0; i < 10000; i++)
-		//{
-		//	std::cout << unsigned(buff.data()[i]) << " ";
-		//	int16_t sampleAsInt = twoBytesToInt(buff, 0, Endianness::LittleEndian);
-		//	float sample = sixteenBitIntToSample(sampleAsInt);
-		//}
 		wavHeader.pFloatdata.resize(2);
 		wavHeader.pFloatdata[0].resize(sSize);
 		wavHeader.pFloatdata[1].resize(sSize);
@@ -337,24 +329,16 @@ int main(int argc, char* argv[])
 				// std::cout << "sampleIndex: " << sampleIndex << std::endl;
 
 				int16_t sampleAsInt = twoBytesToInt(buff, sampleIndex, Endianness::LittleEndian);
-				std::cout << unsigned(sampleAsInt);
+				// std::cout << unsigned(sampleAsInt);
 				float sample = sixteenBitIntToSample(sampleAsInt);
-				// std::cout << sample << std::endl;
 				wavHeader.pFloatdata[channel].push_back(sample);
 				sampleIndex += 2;
 			}
 		}
 		// --------------------------------------------------------------------
 
-		std::cout << "bytesRead : " << bytesRead << std::endl;
-
-		//for (int i = 0; i < 30000; i++) {
-		//	std::cout << wavHeader.pFloatdata[0][i];
-		//}
-		// PlayAudioStream(&wavHeader);
-		playClipFromFile("sharks");
-
-		std::cout << "Channels: " << pWavFormatEx->nChannels << std::endl;
+		PlayAudioStream(&wavHeader);
+		// playClipFromFile("sharks");
 	}
 
 	//don't forget to release everything

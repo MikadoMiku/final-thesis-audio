@@ -170,6 +170,8 @@ public:
      */
     AudioBuffer samples;
 
+    std::vector<uint8_t> fileData;
+
     //=============================================================
     /** An optional iXML chunk that can be added to the AudioFile.
      */
@@ -477,8 +479,6 @@ bool AudioFile<T>::load(std::string filePath)
         return false;
     }
 
-    std::vector<uint8_t> fileData;
-
     file.unsetf(std::ios::skipws);
 
     file.seekg(0, std::ios::end);
@@ -661,6 +661,8 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData)
         iXMLChunk = std::string((const char*)&fileData[indexOfXMLChunk + 8], chunkSize);
     }
 
+    fileData.clear();
+    fileData.shrink_to_fit();
     return true;
 }
 

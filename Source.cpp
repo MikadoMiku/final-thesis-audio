@@ -50,6 +50,7 @@ MyAudioSource::MyAudioSource()
 MyAudioSource::~MyAudioSource()
 {
 	pcmAudio.clear();
+	pcmAudio.shrink_to_fit();
 }
 //-----------------------------------------------------------
 
@@ -71,7 +72,6 @@ HRESULT MyAudioSource::SetFormat(WAVEFORMATEX *wfex)
 		format.Format = *wfex;
 		format.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
 		INIT_WAVEFORMATEX_GUID(&format.SubFormat, wfex->wFormatTag);
-		// INIT_WAVEFORMATEX_GUID(&format.SubFormat, wfex->wFormatTag);
 		format.Samples.wValidBitsPerSample = format.Format.wBitsPerSample;
 		format.dwChannelMask = 0;
 	}
@@ -125,7 +125,6 @@ HRESULT MyAudioSource::LoadData(UINT32 totalFrames, BYTE *dataOut, DWORD *flags,
 			{
 				fData[i + chan] = (pcmPos < pcmAudio[0].size()) ? pcmAudio[chan][pcmPos] : 0.0f;
 			}
-			// std::cout << "Sample - " << fData[i] << std::endl;
 			pcmPos++;
 		}
 	}
@@ -189,7 +188,7 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 		sourceComs::CLSID_MMDeviceEnumerator, NULL,
 		CLSCTX_ALL, sourceComs::IID_IMMDeviceEnumerator,
 		(void **)&pEnumerator);
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 	// GETTING THE DEFAULT AUDIO ENDPOINT DEVICE
 	if (audioEndpointId == NULL)
@@ -197,20 +196,20 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 
 		hr = pEnumerator->GetDefaultAudioEndpoint(
 			eRender, eMultimedia, &pDevice);
-		EXIT_ON_ERROR(hr)
+		EXIT_ON_ERROR(hr);
 	}
 	else
 	{
 		hr = pEnumerator->GetDevice(audioEndpointId, &pDevice);
-		EXIT_ON_ERROR(hr)
+		EXIT_ON_ERROR(hr);
 	}
 	hr = pDevice->Activate(
 		IID_IAudioClient, CLSCTX_ALL,
 		NULL, (void **)&pAudioClient);
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 	// The GetMixFormat method retrieves the stream format that the audio engine uses for its internal processing of shared-mode streams.
 	hr = pAudioClient->GetMixFormat(&pwfx);
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 	std::cout << "Got mix format: " << pwfx->wFormatTag << std::endl;
 
 	hr = pAudioClient->Initialize(
@@ -220,34 +219,34 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 		0,
 		pwfx,
 		NULL);
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 	// Tell the audio source which format to use.
 	hr = pMySource->SetFormat(pwfx);
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 	// Get the actual size of the allocated buffer.
 	hr = pAudioClient->GetBufferSize(&bufferFrameCount);
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 	hr = pAudioClient->GetService(
 		IID_IAudioRenderClient,
 		(void **)&pRenderClient);
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 	// Grab the entire buffer for the initial fill operation.
 	hr = pRenderClient->GetBuffer(bufferFrameCount, &pData);
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 	// Load the initial data into the shared buffer.
 	hr = pMySource->LoadData(bufferFrameCount, pData, &flags, wavHeader);
 	std::cout << "got done loading data" << std::endl;
 
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 	hr = pRenderClient->ReleaseBuffer(bufferFrameCount, flags);
 	std::cout << "got done releasing buffer" << std::endl;
 
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 	// Calculate the actual duration of the allocated buffer.
 	hnsActualDuration = (double)REFTIMES_PER_SEC *
@@ -256,7 +255,7 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 	hr = pAudioClient->Start(); // Start playing.
 	std::cout << "Started playing...." << std::endl;
 
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 	// Each loop fills about half of the shared buffer.
 	while (flags != AUDCLNT_BUFFERFLAGS_SILENT && !stopMusicFlag)
@@ -266,20 +265,20 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 
 		// See how much buffer space is available.
 		hr = pAudioClient->GetCurrentPadding(&numFramesPadding);
-		EXIT_ON_ERROR(hr)
+		EXIT_ON_ERROR(hr);
 
 		numFramesAvailable = bufferFrameCount - numFramesPadding;
 
 		// Grab all the available space in the shared buffer.
 		hr = pRenderClient->GetBuffer(numFramesAvailable, &pData);
-		EXIT_ON_ERROR(hr)
+		EXIT_ON_ERROR(hr);
 
 		// Get next 1/2-second of data from the audio source.
 		hr = pMySource->LoadData(numFramesAvailable, pData, &flags, wavHeader);
-		EXIT_ON_ERROR(hr)
+		EXIT_ON_ERROR(hr);
 
 		hr = pRenderClient->ReleaseBuffer(numFramesAvailable, flags);
-		EXIT_ON_ERROR(hr)
+		EXIT_ON_ERROR(hr);
 	}
 
 	if (!stopMusicFlag)
@@ -289,15 +288,17 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 	}
 
 	hr = pAudioClient->Stop(); // Stop playing.
-	EXIT_ON_ERROR(hr)
+	EXIT_ON_ERROR(hr);
 
 Exit:
 	CoTaskMemFree(pwfx);
-	SAFE_RELEASE(pEnumerator)
-	SAFE_RELEASE(pDevice)
-	SAFE_RELEASE(pAudioClient)
-	SAFE_RELEASE(pRenderClient)
-
+	SAFE_RELEASE(pEnumerator);
+	SAFE_RELEASE(pDevice);
+	SAFE_RELEASE(pAudioClient);
+	SAFE_RELEASE(pRenderClient);
+	wavHeader->pFloatdata.clear();
+	wavHeader->pFloatdata.shrink_to_fit();
+	delete pMySource;
 	return hr;
 }
 

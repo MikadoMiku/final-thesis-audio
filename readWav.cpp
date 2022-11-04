@@ -24,7 +24,7 @@ void swap_endian32(uint32_t val)
 int readFile(WAV_HEADER *wavHeader, string clipName)
 {
 
-	AudioFile<float> audioFile;
+	static AudioFile<float> audioFile;
     std::string path = "C:/Users/power/Desktop/DEMUT_WAV_CLIPS/";
 
 	// audioFile.load("C:/Users/power/Downloads/sharks.wav");
@@ -44,12 +44,8 @@ int readFile(WAV_HEADER *wavHeader, string clipName)
 			wavHeader->pFloatdata[y][x] = audioFile.samples[y][x];
 		}
 	}
-
-	for (size_t i = 0; i < audioFile.samples.size(); i++)
-	{
-		audioFile.samples[i].clear();
-	}
-
+	audioFile.samples.clear();
+	audioFile.samples.shrink_to_fit();
 	return 0;
 }
 

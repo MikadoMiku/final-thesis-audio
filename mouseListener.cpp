@@ -136,7 +136,7 @@ void startMouseListener(const Napi::CallbackInfo &info)
 
     while (!stopMouseListener || !quit)
     {
-        while (PeekMessage(&event, 0, 0, 0, PM_REMOVE))
+        while (GetMessage(&event, 0, 0, 0))
         {
             if (event.message == WM_QUIT || stopMouseListener)
             {

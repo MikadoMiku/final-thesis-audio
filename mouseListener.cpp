@@ -21,6 +21,7 @@
 #include <cstdio>
 #include <iostream>
 #include "mouseListener.h"
+#include "audioPlayer.h"
 
 // Structure to store out input data.
 // Not necessary, I just find it neat.
@@ -40,7 +41,7 @@ struct
 
 Napi::ThreadSafeFunction tsfn;
 
-double CalculateDegreeFromVectors(int x, int y);
+int CalculateDegreeFromVectors(int x, int y);
 
 // Data structure representing our thread-safe function context.
 struct TsfnContext
@@ -204,13 +205,14 @@ LRESULT CALLBACK EventHandler(
             {
                 input.mouse.y *= -1;
                 input.mouse.middleDown = false;
-                double result = CalculateDegreeFromVectors(input.mouse.x, input.mouse.y);
-                std::cout << result << std::endl;
+                int sector = CalculateDegreeFromVectors(input.mouse.x, input.mouse.y);
+                std::cout << "Sector: " << sector << std::endl;
                 napi_status status =
                     tsfn.BlockingCall([=](Napi::Env env, Napi::Function jsCallback)
                                       { jsCallback.Call(
                                             {Napi::Number::New(env, input.mouse.x),
-                                             Napi::Number::New(env, input.mouse.y)}); });
+                                             Napi::Number::New(env, input.mouse.y),
+                                             Napi::Number::New(env, sector)}); });
 
                 if (status != napi_ok)
                 {
@@ -258,7 +260,7 @@ void FinalizerCallback(Napi::Env env, void *finalizeData, TsfnContext *context)
     delete context;
 }
 
-double CalculateDegreeFromVectors(signed int x, signed int y)
+int CalculateDegreeFromVectors(signed int x, signed int y)
 {
     double vectorOneLength = y;
     double vectorTwoLength = sqrt(x * x + y * y);
@@ -272,15 +274,17 @@ double CalculateDegreeFromVectors(signed int x, signed int y)
         if ((180.0 + sliverDegree + 22.5) > 360)
         {
             std::cout << "(360) Sector is: " << ((180.0 + sliverDegree + 22.5) - 360.0) / 45.0 << std::endl;
+            return ceil(((180.0 + sliverDegree + 22.5) - 360.0) / 45.0);
         }
         else
         {
             std::cout << "The Sector is: " << (180.0 + sliverDegree + 22.5) / 45.0 << std::endl;
+            return ceil((180.0 + sliverDegree) / 45.0);
         }
-        return 180.0 + sliverDegree;
+        // return 180.0 + sliverDegree;
     }
 
     std::cout << "(Non Sliver)The Sector is: " << ((degree * 180 / 3.1415) + 22.5) / 45.0 << std::endl;
-
-    return degree * 180 / 3.1415;
+    return ceil(((degree * 180 / 3.1415) + 22.5) / 45.0);
+    // return degree * 180 / 3.1415;
 }

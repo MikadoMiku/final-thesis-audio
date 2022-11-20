@@ -23,6 +23,8 @@
 #include "mouseListener.h"
 #include "audioPlayer.h"
 
+// https://gist.github.com/luluco250/ac79d72a734295f167851ffdb36d77ee
+
 // Structure to store out input data.
 // Not necessary, I just find it neat.
 struct
@@ -73,7 +75,7 @@ void startMouseListener(const Napi::CallbackInfo &info)
     // Construct context data
     auto contextData = new TsfnContext(env);
 
-    // Create a ThreadSafeFunction
+    // Create a ThreadSafeFunction https://github.com/nodejs/node-addon-api/blob/main/doc/typed_threadsafe_function.md
     tsfn = Napi::ThreadSafeFunction::New(
         env,
         info[0].As<Napi::Function>(), // JavaScript function called asynchronously

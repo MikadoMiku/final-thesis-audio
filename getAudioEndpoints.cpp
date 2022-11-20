@@ -216,9 +216,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "listAudioClips"), Napi::Function::New(env, listVoiceQuips));
     exports.Set(Napi::String::New(env, "playClip"), Napi::Function::New(env, playClip));
     exports.Set(Napi::String::New(env, "setAudioEndpointDeviceId"), Napi::Function::New(env, setAudioEndpointDeviceId));
-    /*
-        exports.Set(Napi::String::New(env, "start"), Napi::Function::New(env, Start));
-    exports.Set(Napi::String::New(env, "stop"), Napi::Function::New(env, Stop)); */
     return exports;
 }
 

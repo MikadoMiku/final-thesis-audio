@@ -11,6 +11,7 @@
 #include <sphelper.h>
 #include "audioPlayer.h"
 #include "readWavHeader.h"
+#include "ttsFunctionality.h"
 #include <vector>
 #include <iterator>
 
@@ -37,10 +38,6 @@ float sixteenBitIntToSample(int16_t sample)
 	return static_cast<float>(sample) / static_cast<float>(32768.);
 }
 
-std::atomic<bool> stopMusicFlag = FALSE;
-
-LPCWSTR audioEndpointId;
-
 #define EXIT_ON_ERROR(hres)                 \
 	if (FAILED(hres))                       \
 	{                                       \
@@ -64,10 +61,15 @@ bool listening = FALSE;
 // globally or you will get problems since every function uses this variable.
 HHOOK _hook;
 
-std::string ConvertKeyCodeToString(int key_stroke);
-std::string GetLastErrorAsString();
+void writeOverSynthString(std::string newString)
+{
+	ws.clear();
+	std::wstring newWideString(newString.begin(), newString.end());
+	ws.append(newWideString);
+}
 
-void textToSpeechFile()
+// Speech synthesizer and file creation
+int textToSpeechFile(std::string fileName)
 {
 	CComPtr<ISpVoice> cpVoice;
 	CComPtr<ISpStream> cpStream;
@@ -84,6 +86,12 @@ void textToSpeechFile()
 	pcmWaveFormat.wBitsPerSample = 16;
 	pcmWaveFormat.cbSize = 0;
 
+	// Dynamic file creation path
+	std::string fullFilePath = "C:\\Users\\power\\Desktop\\DEMUT_WAV_CLIPS\\";
+	fullFilePath.append(fileName);
+	fullFilePath.append(".wav");
+	std::wstring wideFullFilePath(fullFilePath.begin(), fullFilePath.end());
+
 	hr = CoInitialize(nullptr);
 
 	EXIT_ON_ERROR(hr);
@@ -96,7 +104,7 @@ void textToSpeechFile()
 
 	EXIT_ON_ERROR(hr);
 
-	hr = SPBindToFile(L"C:\\Users\\power\\Desktop\\DEMUT_WAV_CLIPS\\ttsTest.wav", SPFM_CREATE_ALWAYS, &cpStream, &cAudioFmt.FormatId(), cAudioFmt.WaveFormatExPtr());
+	hr = SPBindToFile(wideFullFilePath.c_str(), SPFM_CREATE_ALWAYS, &cpStream, &cAudioFmt.FormatId(), cAudioFmt.WaveFormatExPtr());
 
 	EXIT_ON_ERROR(hr);
 
@@ -114,7 +122,7 @@ void textToSpeechFile()
 
 	Sleep(2000);
 
-	playClipFromFile("sharks");
+	// playClipFromFile(fileName);
 
 	hr = cpStream->Close();
 
@@ -124,9 +132,10 @@ Exit:
 	// Release the stream and voice object
 	cpStream.Release();
 	cpVoice.Release();
-	return;
+	return 0;
 }
 
+// Keyboard listener
 int secondMain()
 {
 	std::wcout << "Starting...." << std::endl;
@@ -163,7 +172,7 @@ int secondMain()
 													   {
 														   // Create TTS file
 														   listening = FALSE;
-														   textToSpeechFile();
+														   textToSpeechFile("keyboardListenerTest");
 														   ws.clear();
 													   }
 													   else

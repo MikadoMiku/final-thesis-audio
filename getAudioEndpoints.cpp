@@ -11,6 +11,7 @@
 
 #include "audioPlayer.h"
 #include "mouseListener.h"
+#include "ttsFunctionality.h"
 
 #define EXIT_ON_ERROR(hres)                \
     if (FAILED(hres))                      \
@@ -192,6 +193,14 @@ void setAudioEndpointDeviceId(const Napi::CallbackInfo &info)
     audioEndpointId = audioEndpointIdWide.c_str();
 }
 
+void synthesizeTextToAudioFile(const Napi::CallbackInfo &info)
+{
+    std::string textToSynthesize = info[0].ToString().Utf8Value();
+    std::string newSpeechFilename = info[1].ToString().Utf8Value();
+    writeOverSynthString(textToSynthesize);
+    textToSpeechFile(newSpeechFilename);
+}
+
 // Declare JS functions and map them to native functions
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
@@ -202,6 +211,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "listAudioClips"), Napi::Function::New(env, listVoiceQuips));
     exports.Set(Napi::String::New(env, "playClip"), Napi::Function::New(env, playClip));
     exports.Set(Napi::String::New(env, "setAudioEndpointDeviceId"), Napi::Function::New(env, setAudioEndpointDeviceId));
+    exports.Set(Napi::String::New(env, "synthesizeTextToAudioFile"), Napi::Function::New(env, synthesizeTextToAudioFile));
     return exports;
 }
 

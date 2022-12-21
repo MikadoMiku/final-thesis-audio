@@ -42,7 +42,6 @@ private:
 //-----------------------------------------------------------
 MyAudioSource::MyAudioSource()
 {
-	// this->init();
 	std::cout << "Starting my audio source..." << std::endl;
 }
 //-----------------------------------------------------------
@@ -97,24 +96,6 @@ HRESULT MyAudioSource::LoadData(UINT32 totalFrames, BYTE *dataOut, DWORD *flags,
 {
 	float *fData = (float *)dataOut;
 	UINT32 totalSamples = totalFrames * format.Format.nChannels;
-	if (!initialised)
-	{
-		init(wavHeader);
-		bufferSize = totalFrames * format.Format.nChannels;
-		std::cout << "bufferSize: " << bufferSize << '\n';
-		std::cout << "sampsPerChan: " << totalFrames / format.Format.nChannels << '\n';
-		std::cout << "fData[totalSamples]: " << fData[totalFrames] << '\n';
-		std::cout << "fData[bufferSize]: " << fData[bufferSize] << '\n';
-		// std::cout << "buffer address: " << long(dataOut) << '\n';
-	}
-	// else
-	//{
-	//	std::cout << "Frames to Fill: " << totalFrames << '\n';
-	//	std::cout << "Samples to Fill: " << totalSamples << '\n';
-	//	std::cout << "bufferPos: " << bufferPos << '\n';
-	//	std::cout << "buffer address: " << int(dataOut) << '\n';
-
-	//}
 	if (pcmPos < pcmAudio[0].size())
 	{
 		std::cout << "Starting loading data: " << totalSamples << " | " << pcmPos << std::endl;
@@ -300,17 +281,6 @@ Exit:
 	wavHeader->pFloatdata.shrink_to_fit();
 	delete pMySource;
 	return hr;
-}
-
-int playSongFromFile()
-{
-	WAV_HEADER wavHeader;
-
-	readFile(&wavHeader, "sharks");
-	CoInitialize(nullptr);
-	PlayAudioStream(&wavHeader);
-	CoUninitialize();
-	return 0;
 }
 
 int playClipFromFile(std::string clipName)

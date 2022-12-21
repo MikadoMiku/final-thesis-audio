@@ -157,19 +157,6 @@ void stopSong(const Napi::CallbackInfo &info)
     }
 }
 
-// This should be a worker thread?
-void playSong(const Napi::CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-    if (musicRunning)
-    {
-        stopSong(info);
-    }
-    stopMusicFlag = false;
-    musicRunning = true;
-    musicThread = std::thread(playSongFromFile);
-}
-
 void listenToMouseStart(const Napi::CallbackInfo &info)
 {
     startMouseListener(info);
@@ -210,7 +197,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
     exports.Set(Napi::String::New(env, "getMapSize"), Napi::Function::New(env, getMapSize));
     exports.Set(Napi::String::New(env, "getAudioEndpoints"), Napi::Function::New(env, getAudioEndpoints));
-    exports.Set(Napi::String::New(env, "playSong"), Napi::Function::New(env, playSong));
     exports.Set(Napi::String::New(env, "stopSong"), Napi::Function::New(env, stopSong));
     exports.Set(Napi::String::New(env, "startMouseListener"), Napi::Function::New(env, listenToMouseStart));
     exports.Set(Napi::String::New(env, "listAudioClips"), Napi::Function::New(env, listVoiceQuips));

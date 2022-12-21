@@ -20,7 +20,7 @@ enum class Endianness
 	BigEndian
 };
 
-int16_t twoBytesToInt(std::vector<uint8_t>& source, int startIndex, Endianness endianness)
+int16_t twoBytesToInt(std::vector<uint8_t> &source, int startIndex, Endianness endianness)
 {
 	int16_t result;
 
@@ -34,18 +34,18 @@ int16_t twoBytesToInt(std::vector<uint8_t>& source, int startIndex, Endianness e
 
 float sixteenBitIntToSample(int16_t sample)
 {
-	return static_cast<float> (sample) / static_cast<float> (32768.);
+	return static_cast<float>(sample) / static_cast<float>(32768.);
 }
 
 std::atomic<bool> stopMusicFlag = FALSE;
 
 LPCWSTR audioEndpointId;
 
-#define EXIT_ON_ERROR(hres)                \
-	if (FAILED(hres))                      \
-	{                                      \
+#define EXIT_ON_ERROR(hres)                 \
+	if (FAILED(hres))                       \
+	{                                       \
 		std::wcout << "ERROR" << std::endl; \
-		goto Exit;                         \
+		goto Exit;                          \
 	}
 #define SAFE_RELEASE(punk) \
 	if ((punk) != NULL)    \
@@ -54,13 +54,11 @@ LPCWSTR audioEndpointId;
 		(punk) = NULL;     \
 	}
 
-
 std::thread nativeThread;
 
 std::wstring ws;
 
 bool listening = FALSE;
-
 
 // variable to store the HANDLE to the hook. Don't declare it anywhere else then
 // globally or you will get problems since every function uses this variable.
@@ -69,11 +67,11 @@ HHOOK _hook;
 std::string ConvertKeyCodeToString(int key_stroke);
 std::string GetLastErrorAsString();
 
-
-void textToSpeechFile() {
-	CComPtr <ISpVoice> cpVoice;
-	CComPtr <ISpStream> cpStream;
-	CComPtr <IStream> cpBaseStream;
+void textToSpeechFile()
+{
+	CComPtr<ISpVoice> cpVoice;
+	CComPtr<ISpStream> cpStream;
+	CComPtr<IStream> cpBaseStream;
 	CSpStreamFormat cAudioFmt;
 	HRESULT hr;
 	WAVEFORMATEX pcmWaveFormat;
@@ -123,7 +121,7 @@ void textToSpeechFile() {
 	EXIT_ON_ERROR(hr);
 
 Exit:
-	//Release the stream and voice object    
+	// Release the stream and voice object
 	cpStream.Release();
 	cpVoice.Release();
 	return;
@@ -138,118 +136,134 @@ int secondMain()
 	// Create a native thread with its own message loop which is required to
 	// attach low level keyboard hooks in order not to block the main thread
 	nativeThread = std::thread([]
-		{
-			std::wcout << "Starting thread...." << std::endl;
+							   {
+								   std::wcout << "Starting thread...." << std::endl;
 
-			// This is the callback function. Consider it the event that is raised when,
-			// in this case, a key is pressed or released.
-			static auto HookCallback = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT {
-				try {
-					if (nCode >= 0) {
-						// lParam is the pointer to the struct containing the data needed,
-						// so cast and assign it to kdbStruct.
-						LPKBDLLHOOKSTRUCT k = (LPKBDLLHOOKSTRUCT)lParam;
-						BYTE keyStates[256];
-						GetKeyboardState(keyStates);
+								   // This is the callback function. Consider it the event that is raised when,
+								   // in this case, a key is pressed or released.
+								   static auto HookCallback = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT
+								   {
+									   try
+									   {
+										   if (nCode >= 0)
+										   {
+											   // lParam is the pointer to the struct containing the data needed,
+											   // so cast and assign it to kdbStruct.
+											   LPKBDLLHOOKSTRUCT k = (LPKBDLLHOOKSTRUCT)lParam;
+											   BYTE keyStates[256];
+											   GetKeyboardState(keyStates);
 
-						WCHAR TransedChar = NULL;
-						if (wParam == WM_KEYDOWN) {
-							// This should start and end the listening of the keyboard, ending means it should start processing.
-							if (k->vkCode == VK_RETURN) {
-								if (listening) {
-									// Create TTS file
-									listening = FALSE;
-									textToSpeechFile();
-									ws.clear();
-								}
-								else {
-									listening = TRUE;
-								}
-							}
-							// If problems of getting correct shift toggle, look into async version of getting key state. 0x8000 is for getting the high order bit of the 16 bit return
-							if (!listening || k->vkCode == 160)
-							{
-								return CallNextHookEx(_hook, nCode, wParam, lParam);
-							}
-							// must be a better way of getting correct vk code for delete and shift and such, maybe with like mapvirutalkey?
-							if (k->vkCode == 8) {
-								std::wcout << "deleting char" << std::endl;
-								ws.erase(ws.length() - 1);
-								std::wcout << ws << std::endl;
-							}
-							// Output mouse input to console:
-							// ToUnicodeEx(k->vkCode, k->scanCode, keyStates, &TransedChar, 1, 0, GetKeyboardLayout(0)); // https://cpp.hotexamples.com/examples/-/-/ToUnicodeEx/cpp-tounicodeex-function-examples.html
-							// std::wcout << TransedChar << " | " << k->scanCode << " | " << k->vkCode << std::endl;
+											   WCHAR TransedChar = NULL;
+											   if (wParam == WM_KEYDOWN)
+											   {
+												   // This should start and end the listening of the keyboard, ending means it should start processing.
+												   if (k->vkCode == VK_RETURN)
+												   {
+													   if (listening)
+													   {
+														   // Create TTS file
+														   listening = FALSE;
+														   textToSpeechFile();
+														   ws.clear();
+													   }
+													   else
+													   {
+														   listening = TRUE;
+													   }
+												   }
+												   // If problems of getting correct shift toggle, look into async version of getting key state. 0x8000 is for getting the high order bit of the 16 bit return
+												   if (!listening || k->vkCode == 160)
+												   {
+													   return CallNextHookEx(_hook, nCode, wParam, lParam);
+												   }
+												   // must be a better way of getting correct vk code for delete and shift and such, maybe with like mapvirutalkey?
+												   if (k->vkCode == 8)
+												   {
+													   std::wcout << "deleting char" << std::endl;
+													   ws.erase(ws.length() - 1);
+													   std::wcout << ws << std::endl;
+												   }
+												   // Output mouse input to console:
+												   // ToUnicodeEx(k->vkCode, k->scanCode, keyStates, &TransedChar, 1, 0, GetKeyboardLayout(0)); // https://cpp.hotexamples.com/examples/-/-/ToUnicodeEx/cpp-tounicodeex-function-examples.html
+												   // std::wcout << TransedChar << " | " << k->scanCode << " | " << k->vkCode << std::endl;
 
-							// implicit casting with char type, otherwise we print out an integer
-							char character = MapVirtualKey(k->vkCode, MAPVK_VK_TO_CHAR);
-							ws += character;
-							std::wcout << character << std::endl;
-						}
-					}
-				}
-				catch (...) {
-					std::wcout << "Something went wrong while handling the key event" << std::endl;
-				}
+												   // implicit casting with char type, otherwise we print out an integer
+												   char character = MapVirtualKey(k->vkCode, MAPVK_VK_TO_CHAR);
+												   ws += character;
+												   std::wcout << character << std::endl;
+											   }
+										   }
+									   }
+									   catch (...)
+									   {
+										   std::wcout << "Something went wrong while handling the key event" << std::endl;
+									   }
 
-				// call the next hook in the hook chain. This is nessecary or your hook
-				// chain will break and the hook stops
-				// Passes hook event to other installed hooks, without this other programs will not receive the event.
-				return CallNextHookEx(_hook, nCode, wParam, lParam);
-			};
+									   // call the next hook in the hook chain. This is nessecary or your hook
+									   // chain will break and the hook stops
+									   // Passes hook event to other installed hooks, without this other programs will not receive the event.
+									   return CallNextHookEx(_hook, nCode, wParam, lParam);
+								   };
 
-			// Set the hook and set it to use the callback function above
-			// WH_KEYBOARD_LL means it will set a low level keyboard hook. More
-			// information about it at MSDN. The last 2 parameters are NULL, 0 because
-			// the callback function is in the same thread and window as the function
-			// that sets and releases the hook.
-			if (!(_hook = SetWindowsHookEx(WH_KEYBOARD_LL, HookCallback, NULL, 0))) {
-				std::wcout << "Failed to install hook!" << std::endl;
-			}
+								   // Set the hook and set it to use the callback function above
+								   // WH_KEYBOARD_LL means it will set a low level keyboard hook. More
+								   // information about it at MSDN. The last 2 parameters are NULL, 0 because
+								   // the callback function is in the same thread and window as the function
+								   // that sets and releases the hook.
+								   if (!(_hook = SetWindowsHookEx(WH_KEYBOARD_LL, HookCallback, NULL, 0)))
+								   {
+									   std::wcout << "Failed to install hook!" << std::endl;
+								   }
 
-			// Create a message loop
-			MSG msg;
-			bool done = FALSE;
+								   // Create a message loop
+								   MSG msg;
+								   bool done = FALSE;
 
-			while (!done) {
-				if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-					if (msg.message == WM_QUIT) {
-						done = TRUE;
-					}
-					else {
-						TranslateMessage(&msg);
-						DispatchMessage(&msg);
-					}
-				}
-			}
-
-		});
+								   while (!done)
+								   {
+									   if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+									   {
+										   if (msg.message == WM_QUIT)
+										   {
+											   done = TRUE;
+										   }
+										   else
+										   {
+											   TranslateMessage(&msg);
+											   DispatchMessage(&msg);
+										   }
+									   }
+								   } });
 	nativeThread.join();
 	UnhookWindowsHookEx(_hook);
 	std::wcout << "Ending...." << std::endl;
 	return 0;
 }
 
-int main(int argc, char* argv[])
+// SAPI get raw audio data -- https://github.com/yashasvigirdhar/MS-SAPI-demo/blob/master/DemoApp1/DemoApp1/GetRawAudioData.cpp
+int main(int argc, char *argv[])
 {
 	WAV_HEADER wavHeader;
 	HRESULT hr = S_OK;
-	CComPtr <ISpVoice>	cpVoice;
-	CComPtr <ISpStream> cpStream;
-	CComPtr <IStream> cpBaseStream;
-	GUID guidFormat; WAVEFORMATEX* pWavFormatEx = nullptr;
+	CComPtr<ISpVoice> cpVoice;
+	CComPtr<ISpStream> cpStream;
+	CComPtr<IStream> cpBaseStream;
+	GUID guidFormat;
+	WAVEFORMATEX *pWavFormatEx = nullptr;
 
 	if (FAILED(::CoInitialize(NULL)))
 		return FALSE;
 
 	std::cout << "initialized\n";
 
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr))
+	{
 		std::cout << "creating voice\n";
 		hr = cpVoice.CoCreateInstance(CLSID_SpVoice);
 	}
 
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr))
+	{
 		std::cout << "voice created, initialzing istream\n";
 		hr = cpStream.CoCreateInstance(CLSID_SpStream);
 	}
@@ -262,27 +276,29 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "basestream created, setting format\n";
 		hr = SpConvertStreamFormatEnum(SPSF_48kHz16BitStereo, &guidFormat,
-			&pWavFormatEx);
+									   &pWavFormatEx);
 	}
 	if (SUCCEEDED(hr))
 	{
 		std::cout << "format set,setting the basestream\n";
 		hr = cpStream->SetBaseStream(cpBaseStream, guidFormat,
-			pWavFormatEx);
+									 pWavFormatEx);
 		cpBaseStream.Release();
 	}
 	if (SUCCEEDED(hr))
 	{
 		std::cout << "basestream set, setting cpvoice output\n";
 		hr = cpVoice->SetOutput(cpStream, TRUE);
-		if (SUCCEEDED(hr)) {
+		if (SUCCEEDED(hr))
+		{
 			std::cout << "output set, speaking\n";
 			SpeechVoiceSpeakFlags my_Spflag = SpeechVoiceSpeakFlags::SVSFlagsAsync; // declaring and initializing Speech Voice Flags
 			hr = cpVoice->Speak(L"I need to spend more and more time on this", my_Spflag, NULL);
 			cpVoice->WaitUntilDone(-1);
 		}
 	}
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr))
+	{
 		std::cout << "spoken correctly\n";
 
 		/*To verify that the data has been written correctly, uncomment this, you should hear the voice.
@@ -290,35 +306,35 @@ int main(int argc, char* argv[])
 			cpVoice->SpeakStream(cpStream, SPF_DEFAULT, NULL);
 			*/
 
-		//After SAPI writes the stream, the stream position is at the end, so we need to set it to the beginning.
-		_LARGE_INTEGER a = { 0 };
+		// After SAPI writes the stream, the stream position is at the end, so we need to set it to the beginning.
+		_LARGE_INTEGER a = {0};
 		hr = cpStream->Seek(a, STREAM_SEEK_SET, NULL);
 
-		//get the base istream from the ispstream 
-		IStream* pIstream;
+		// get the base istream from the ispstream
+		IStream *pIstream;
 		cpStream->GetBaseStream(&pIstream);
 
-		//calculate the size that is to be read
+		// calculate the size that is to be read
 		STATSTG stats;
 		pIstream->Stat(&stats, STATFLAG_NONAME);
 
-		ULONG sSize = stats.cbSize.QuadPart;	//size of the data to be read
+		ULONG sSize = stats.cbSize.QuadPart; // size of the data to be read
 		std::cout << "size : " << stats.cbSize.QuadPart << std::endl;
 
-		ULONG bytesRead;	//	this will tell the number of bytes that have been read
-		uint8_t* pBuffer = new uint8_t[sSize];	//buffer to read the data
+		ULONG bytesRead;					   //	this will tell the number of bytes that have been read
+		uint8_t *pBuffer = new uint8_t[sSize]; // buffer to read the data
 		std::vector<uint8_t> buff;
 		buff.resize(sSize);
-		//read the data into the buffer
-		pIstream->Read(reinterpret_cast<char*> (buff.data()), sSize, &bytesRead);
+		// read the data into the buffer
+		pIstream->Read(reinterpret_cast<char *>(buff.data()), sSize, &bytesRead);
 
 		wavHeader.pFloatdata.resize(2);
 		wavHeader.pFloatdata[0].resize(sSize);
 		wavHeader.pFloatdata[1].resize(sSize);
 		int samplesStartIndex = 0;
 		int numSamples = sSize / (2 * 16 / 8);
-		uint16_t numBytesPerSample = static_cast<uint16_t> (16) / 8;
-		uint16_t numBytesPerBlock = static_cast<uint16_t> (pWavFormatEx->nAvgBytesPerSec);
+		uint16_t numBytesPerSample = static_cast<uint16_t>(16) / 8;
+		uint16_t numBytesPerBlock = static_cast<uint16_t>(pWavFormatEx->nAvgBytesPerSec);
 		int sampleIndex = 0;
 		// --------------------------------------------------------------------
 		for (int i = 0; i < numSamples; i++)
@@ -341,7 +357,7 @@ int main(int argc, char* argv[])
 		// playClipFromFile("sharks");
 	}
 
-	//don't forget to release everything
+	// don't forget to release everything
 	cpStream.Release();
 	cpVoice.Release();
 

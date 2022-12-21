@@ -5,8 +5,6 @@
 #include <string>
 #include "readWavHeader.h"
 
-int playSongFromFile();
-
 int playClipFromFile(std::string clipName);
 
 HRESULT PlayAudioStream(WAV_HEADER* wavHeader);

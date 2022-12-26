@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdio>
 #include <vector>
+#include <string>
 // Function prototypes
 int getFileSize(FILE* inFile);
 
@@ -30,4 +31,5 @@ struct WAV_HEADER
 
 #endif
 
-int readFile(WAV_HEADER *wavHeader);
+// extern WAV_HEADER globalStruct;
+int readFile(WAV_HEADER *wavHeader, std::string clipName);

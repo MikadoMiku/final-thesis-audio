@@ -189,6 +189,7 @@ void playClip(const Napi::CallbackInfo &info)
 void setAudioEndpointDeviceId(const Napi::CallbackInfo &info)
 {
     std::string audioEndpointIdString = info[0].ToString().Utf8Value();
+    std::cout << "audio endpoint id" << audioEndpointIdString << std::endl;
     std::wstring audioEndpointIdWide = std::wstring(audioEndpointIdString.begin(), audioEndpointIdString.end());
     audioEndpointId = audioEndpointIdWide.c_str();
 }
@@ -199,6 +200,20 @@ void synthesizeTextToAudioFile(const Napi::CallbackInfo &info)
     std::string newSpeechFilename = info[1].ToString().Utf8Value();
     writeOverSynthString(textToSynthesize);
     textToSpeechFile(newSpeechFilename);
+}
+
+void synthesizeTextToVoice(const Napi::CallbackInfo &info)
+{
+    std::string textToSynthesize = info[0].ToString().Utf8Value();
+    
+    Napi::Env env = info.Env();
+    if (musicRunning)
+    {
+        stopSong(info);
+    }
+    stopMusicFlag = false;
+    musicRunning = true;
+    musicThread = std::thread(synthesizeVoice, textToSynthesize);
 }
 
 // Declare JS functions and map them to native functions
@@ -212,6 +227,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "playClip"), Napi::Function::New(env, playClip));
     exports.Set(Napi::String::New(env, "setAudioEndpointDeviceId"), Napi::Function::New(env, setAudioEndpointDeviceId));
     exports.Set(Napi::String::New(env, "synthesizeTextToAudioFile"), Napi::Function::New(env, synthesizeTextToAudioFile));
+    exports.Set(Napi::String::New(env, "simulateVoice"), Napi::Function::New(env, synthesizeTextToVoice));
     return exports;
 }
 

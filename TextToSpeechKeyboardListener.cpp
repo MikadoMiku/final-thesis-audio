@@ -250,7 +250,8 @@ int secondMain()
 }
 
 // SAPI get raw audio data -- https://github.com/yashasvigirdhar/MS-SAPI-demo/blob/master/DemoApp1/DemoApp1/GetRawAudioData.cpp
-int main(int argc, char *argv[])
+// int main(int argc, char *argv[])
+int synthesizeVoice(std::string synthText)
 {
 	WAV_HEADER wavHeader;
 	HRESULT hr = S_OK;
@@ -259,6 +260,7 @@ int main(int argc, char *argv[])
 	CComPtr<IStream> cpBaseStream;
 	GUID guidFormat;
 	WAVEFORMATEX *pWavFormatEx = nullptr;
+	std::wstring wSynthText(synthText.begin(), synthText.end());
 
 	if (FAILED(::CoInitialize(NULL)))
 		return FALSE;
@@ -302,7 +304,8 @@ int main(int argc, char *argv[])
 		{
 			std::cout << "output set, speaking\n";
 			SpeechVoiceSpeakFlags my_Spflag = SpeechVoiceSpeakFlags::SVSFlagsAsync; // declaring and initializing Speech Voice Flags
-			hr = cpVoice->Speak(L"I need to spend more and more time on this", my_Spflag, NULL);
+			SpeechVoiceSpeakFlags second_Spflag = SpeechVoiceSpeakFlags::SVSFIsXML;
+			hr = cpVoice->Speak(wSynthText.c_str(), my_Spflag | second_Spflag, NULL);
 			cpVoice->WaitUntilDone(-1);
 		}
 	}
@@ -336,6 +339,7 @@ int main(int argc, char *argv[])
 		buff.resize(sSize);
 		// read the data into the buffer
 		pIstream->Read(reinterpret_cast<char *>(buff.data()), sSize, &bytesRead);
+		std::cout << "Checkpoint 1" << std::endl;
 
 		wavHeader.pFloatdata.resize(2);
 		wavHeader.pFloatdata[0].resize(sSize);
@@ -345,6 +349,8 @@ int main(int argc, char *argv[])
 		uint16_t numBytesPerSample = static_cast<uint16_t>(16) / 8;
 		uint16_t numBytesPerBlock = static_cast<uint16_t>(pWavFormatEx->nAvgBytesPerSec);
 		int sampleIndex = 0;
+		std::cout << "Checkpoint 2" << std::endl;
+
 		// --------------------------------------------------------------------
 		for (int i = 0; i < numSamples; i++)
 		{
@@ -356,11 +362,13 @@ int main(int argc, char *argv[])
 				int16_t sampleAsInt = twoBytesToInt(buff, sampleIndex, Endianness::LittleEndian);
 				// std::cout << unsigned(sampleAsInt);
 				float sample = sixteenBitIntToSample(sampleAsInt);
+
 				wavHeader.pFloatdata[channel].push_back(sample);
 				sampleIndex += 2;
 			}
 		}
 		// --------------------------------------------------------------------
+		std::cout << "Checkpoint 3" << std::endl;
 
 		PlayAudioStream(&wavHeader);
 		// playClipFromFile("sharks");

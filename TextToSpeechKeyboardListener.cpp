@@ -251,9 +251,8 @@ int secondMain()
 
 // SAPI get raw audio data -- https://github.com/yashasvigirdhar/MS-SAPI-demo/blob/master/DemoApp1/DemoApp1/GetRawAudioData.cpp
 // int main(int argc, char *argv[])
-int synthesizeVoice(std::string synthText)
+int synthesizeVoice(std::string synthText, WAV_HEADER *wavHeader)
 {
-	WAV_HEADER wavHeader;
 	HRESULT hr = S_OK;
 	CComPtr<ISpVoice> cpVoice;
 	CComPtr<ISpStream> cpStream;
@@ -294,7 +293,7 @@ int synthesizeVoice(std::string synthText)
 		std::cout << "format set,setting the basestream\n";
 		hr = cpStream->SetBaseStream(cpBaseStream, guidFormat,
 									 pWavFormatEx);
-		cpBaseStream.Release();
+		// cpBaseStream.Release();
 	}
 	if (SUCCEEDED(hr))
 	{
@@ -304,8 +303,7 @@ int synthesizeVoice(std::string synthText)
 		{
 			std::cout << "output set, speaking\n";
 			SpeechVoiceSpeakFlags my_Spflag = SpeechVoiceSpeakFlags::SVSFlagsAsync; // declaring and initializing Speech Voice Flags
-			SpeechVoiceSpeakFlags second_Spflag = SpeechVoiceSpeakFlags::SVSFIsXML;
-			hr = cpVoice->Speak(wSynthText.c_str(), my_Spflag | second_Spflag, NULL);
+			hr = cpVoice->Speak(wSynthText.c_str(), my_Spflag, NULL);
 			cpVoice->WaitUntilDone(-1);
 		}
 	}
@@ -337,20 +335,35 @@ int synthesizeVoice(std::string synthText)
 		uint8_t *pBuffer = new uint8_t[sSize]; // buffer to read the data
 		std::vector<uint8_t> buff;
 		buff.resize(sSize);
+
 		// read the data into the buffer
 		pIstream->Read(reinterpret_cast<char *>(buff.data()), sSize, &bytesRead);
-		std::cout << "Checkpoint 1" << std::endl;
 
-		wavHeader.pFloatdata.resize(2);
-		wavHeader.pFloatdata[0].resize(sSize);
-		wavHeader.pFloatdata[1].resize(sSize);
+		wavHeader->pFloatdata.resize(2);
+		wavHeader->pFloatdata[0];
+		wavHeader->pFloatdata[1];
 		int samplesStartIndex = 0;
 		int numSamples = sSize / (2 * 16 / 8);
 		uint16_t numBytesPerSample = static_cast<uint16_t>(16) / 8;
 		uint16_t numBytesPerBlock = static_cast<uint16_t>(pWavFormatEx->nAvgBytesPerSec);
 		int sampleIndex = 0;
-		std::cout << "Checkpoint 2" << std::endl;
+		int random = 0;
 
+		// ----------------- mess with buff -------------------------------------
+
+		std::vector<uint8_t> buff2;
+		buff2;
+		std::cout << "THIS IS BUFF 2 ---> " << buff2.size() << std::endl;
+
+		for (int buffIndex = 0; buffIndex < bytesRead; buffIndex++)
+		{
+			if (buff[buffIndex] == 0)
+				continue;
+			buff2.push_back(buff[buffIndex]);
+		}
+		std::cout << "sSize ---> " << sSize << std::endl;
+		std::cout << "ReadBytes ---> " << bytesRead << std::endl;
+		std::cout << "THIS IS BUFF 2 ---> " << buff2.size() << std::endl;
 		// --------------------------------------------------------------------
 		for (int i = 0; i < numSamples; i++)
 		{
@@ -360,17 +373,24 @@ int synthesizeVoice(std::string synthText)
 				// std::cout << "sampleIndex: " << sampleIndex << std::endl;
 
 				int16_t sampleAsInt = twoBytesToInt(buff, sampleIndex, Endianness::LittleEndian);
-				// std::cout << unsigned(sampleAsInt);
+				/* 				if (random < 25000)
+								{
+									if (unsigned(sampleAsInt) == 0)
+									{
+										sampleIndex += 4;
+										break;
+									}
+								} */
 				float sample = sixteenBitIntToSample(sampleAsInt);
 
-				wavHeader.pFloatdata[channel].push_back(sample);
+				wavHeader->pFloatdata[channel].push_back(sample);
 				sampleIndex += 2;
 			}
+			random++;
 		}
 		// --------------------------------------------------------------------
-		std::cout << "Checkpoint 3" << std::endl;
 
-		PlayAudioStream(&wavHeader);
+		// PlayAudioStream(&wavHeader);
 		// playClipFromFile("sharks");
 	}
 

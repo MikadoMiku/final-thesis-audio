@@ -17,6 +17,7 @@
 #include "readWavHeader.h"
 #include <Functiondiscoverykeys_devpkey.h>
 #include "audioPlayer.h"
+#include "ttsFunctionality.h"
 
 class MyAudioSource
 {
@@ -319,6 +320,17 @@ int playClipFromFile(std::string clipName)
 	std::cout << clipName << std::endl;
 
 	readFile(&wavHeader, clipName);
+	CoInitialize(nullptr);
+	PlayAudioStream(&wavHeader);
+	CoUninitialize();
+	return 0;
+}
+
+int playDirectSynthesizedAudio(std::string textToSynthesize)
+{
+	WAV_HEADER wavHeader;
+
+	synthesizeVoice(textToSynthesize, &wavHeader);
 	CoInitialize(nullptr);
 	PlayAudioStream(&wavHeader);
 	CoUninitialize();

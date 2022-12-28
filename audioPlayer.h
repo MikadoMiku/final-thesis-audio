@@ -9,6 +9,8 @@ int playClipFromFile(std::string clipName);
 
 HRESULT PlayAudioStream(WAV_HEADER* wavHeader);
 
+int playDirectSynthesizedAudio(std::string textToSynthesize);
+
 extern std::atomic<bool> stopMusicFlag;
 
 extern LPCWSTR audioEndpointId;

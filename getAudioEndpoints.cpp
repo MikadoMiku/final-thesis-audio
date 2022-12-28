@@ -213,7 +213,7 @@ void synthesizeTextToVoice(const Napi::CallbackInfo &info)
     }
     stopMusicFlag = false;
     musicRunning = true;
-    musicThread = std::thread(synthesizeVoice, textToSynthesize);
+    musicThread = std::thread(playDirectSynthesizedAudio, textToSynthesize);
 }
 
 // Declare JS functions and map them to native functions

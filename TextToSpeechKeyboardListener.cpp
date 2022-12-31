@@ -14,6 +14,7 @@
 #include "ttsFunctionality.h"
 #include <vector>
 #include <iterator>
+#include <filesystem>
 
 enum class Endianness
 {
@@ -87,11 +88,13 @@ int textToSpeechFile(std::string fileName)
 	pcmWaveFormat.cbSize = 0;
 
 	// Dynamic file creation path
-	std::string fullFilePath = "C:\\Users\\power\\Desktop\\DEMUT_WAV_CLIPS\\";
+	std::filesystem::path fullFilePath{"C:/ProgramData/Demut/DEMUT_WAV_CLIPS/" + fileName + ".wav"};
+	// std::string fullFilePath = "C:\\Users\\power\\Desktop\\DEMUT_WAV_CLIPS\\";
+/* 	fullFilePath.append("\\\\");
 	fullFilePath.append(fileName);
-	fullFilePath.append(".wav");
-	std::wstring wideFullFilePath(fullFilePath.begin(), fullFilePath.end());
-
+	fullFilePath.append(".wav"); */
+	// std::wstring wideFullFilePath(fullFilePath.begin(), fullFilePath.end());
+	std::cout << fullFilePath << std::endl;
 	hr = CoInitialize(nullptr);
 
 	EXIT_ON_ERROR(hr);
@@ -104,7 +107,7 @@ int textToSpeechFile(std::string fileName)
 
 	EXIT_ON_ERROR(hr);
 
-	hr = SPBindToFile(wideFullFilePath.c_str(), SPFM_CREATE_ALWAYS, &cpStream, &cAudioFmt.FormatId(), cAudioFmt.WaveFormatExPtr());
+	hr = SPBindToFile(fullFilePath.c_str(), SPFM_CREATE_ALWAYS, &cpStream, &cAudioFmt.FormatId(), cAudioFmt.WaveFormatExPtr());
 
 	EXIT_ON_ERROR(hr);
 

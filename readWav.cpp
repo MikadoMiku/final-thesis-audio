@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "readwavHeader.h"
 #include "customHeader.h"
+#include <filesystem>
 using std::cin;
 using std::cout;
 using std::endl;
@@ -25,10 +26,13 @@ int readFile(WAV_HEADER *wavHeader, string clipName)
 {
 
 	static AudioFile<float> audioFile;
-    std::string path = "C:/Users/power/Desktop/DEMUT_WAV_CLIPS/";
-
+    
+	
+    // std::filesystem::path path{"ProgramData/DEMUT_WAV_CLIPS"};
+	std::string path = "C:/ProgramData/Demut/DEMUT_WAV_CLIPS/";
+	path.append(clipName + ".wav");
 	// audioFile.load("C:/Users/power/Downloads/sharks.wav");
-	audioFile.load(path + clipName + ".wav");
+	audioFile.load(path);
 
 	audioFile.printSummary();
 	int channel = 0;

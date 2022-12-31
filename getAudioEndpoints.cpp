@@ -163,16 +163,6 @@ void listenToMouseStart(const Napi::CallbackInfo &info)
     startMouseListener(info);
 }
 
-void listVoiceQuips(const Napi::CallbackInfo &info)
-{
-    std::string path = "C:/Users/power/Desktop/DEMUT_WAV_CLIPS";
-    const std::filesystem::path fPath = "C:/Users/power/Desktop/DEMUT_WAV_CLIPS";
-    for (auto const &dir_entry : std::filesystem::directory_iterator{fPath})
-    {
-        std::cout << dir_entry.path() << '\n';
-    }
-}
-
 void playClip(const Napi::CallbackInfo &info)
 {
     std::string clipName = info[0].ToString().Utf8Value();
@@ -223,7 +213,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "getAudioEndpoints"), Napi::Function::New(env, getAudioEndpoints));
     exports.Set(Napi::String::New(env, "stopSong"), Napi::Function::New(env, stopSong));
     exports.Set(Napi::String::New(env, "startMouseListener"), Napi::Function::New(env, listenToMouseStart));
-    exports.Set(Napi::String::New(env, "listAudioClips"), Napi::Function::New(env, listVoiceQuips));
     exports.Set(Napi::String::New(env, "playClip"), Napi::Function::New(env, playClip));
     exports.Set(Napi::String::New(env, "setAudioEndpointDeviceId"), Napi::Function::New(env, setAudioEndpointDeviceId));
     exports.Set(Napi::String::New(env, "synthesizeTextToAudioFile"), Napi::Function::New(env, synthesizeTextToAudioFile));

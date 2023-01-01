@@ -101,7 +101,6 @@ HRESULT MyAudioSource::LoadData(UINT32 totalFrames, BYTE *dataOut, DWORD *flags,
 	std::cout << "Starting loading data 1: "
 			  << totalSamples << " | " << pcmPos << std::endl;
 	std::cout << "pcm audio : " << pcmAudio.size() << std::endl;
-	std::cout << "pcmAudio[0].size() : " << pcmAudio[0].size() << std::endl;
 	if (pcmPos < pcmAudio[0].size())
 	{
 		std::cout << "Starting loading data: " << totalSamples << " | " << pcmPos << std::endl;
@@ -156,8 +155,6 @@ const IID IID_IAudioRenderClient = __uuidof(IAudioRenderClient);
 HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 {
 
-	std::cout << "Audio stream checkpoint 1" << std::endl;
-
 	HRESULT hr;
 	REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC;
 	REFERENCE_TIME hnsActualDuration;
@@ -173,15 +170,13 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 	DWORD flags = 0;
 	MyAudioSource *pMySource = new MyAudioSource();
 	pMySource->init(wavHeader);
-
-	std::cout << "Audio stream checkpoint 2" << std::endl;
-
+	std::cout << "Before coCreateInstance" << std::endl;
 	hr = CoCreateInstance(
 		sourceComs::CLSID_MMDeviceEnumerator, NULL,
 		CLSCTX_ALL, sourceComs::IID_IMMDeviceEnumerator,
 		(void **)&pEnumerator);
 	EXIT_ON_ERROR(hr);
-	std::cout << "Audio stream checkpoint 3" << std::endl;
+	std::cout << "After CoCreateInstance" << std::endl;
 
 	// GETTING THE DEFAULT AUDIO ENDPOINT DEVICE
 	if (audioEndpointId == NULL)
@@ -189,9 +184,9 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 
 		hr = pEnumerator->GetDefaultAudioEndpoint(
 			eRender, eMultimedia, &pDevice);
-		std::cout << "Audio stream checkpoint endpoint checkpoint 1" << std::endl;
-
+		std::cout << "audio 1 -" << std::endl;
 		EXIT_ON_ERROR(hr);
+		std::cout << "audio endpoint is NULL" << std::endl;
 	}
 	else
 	{
@@ -199,23 +194,24 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 		std::string str(wstr.begin(), wstr.end());
 
 		hr = pEnumerator->GetDevice(audioEndpointId, &pDevice);
-		std::cout << "Audio stream checkpoint endpoint checkpoint 2" << str << std::endl;
-
+		std::cout << "audio 2 -" << str << std::endl;
 		EXIT_ON_ERROR(hr);
+		std::cout << "Endpoint is not NULL" << str << std::endl;
 	}
-	std::cout << "Audio stream checkpoint 4" << std::endl;
+
+	std::cout << "CHECKPOINT - 1" << std::endl;
 
 	hr = pDevice->Activate(
 		IID_IAudioClient, CLSCTX_ALL,
 		NULL, (void **)&pAudioClient);
-	std::cout << "Audio stream checkpoint 5" << std::endl;
 
 	EXIT_ON_ERROR(hr);
+	std::cout << "CHECKPOINT - 2" << std::endl;
+
 	// The GetMixFormat method retrieves the stream format that the audio engine uses for its internal processing of shared-mode streams.
 	hr = pAudioClient->GetMixFormat(&pwfx);
 	EXIT_ON_ERROR(hr);
-	std::cout << "Got mix format: " << pwfx->wFormatTag << std::endl;
-	std::cout << "Audio stream checkpoint 6" << std::endl;
+	std::cout << "CHECKPOINT - 3" << std::endl;
 
 	hr = pAudioClient->Initialize(
 		AUDCLNT_SHAREMODE_SHARED,
@@ -225,49 +221,46 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 		pwfx,
 		NULL);
 	EXIT_ON_ERROR(hr);
-	std::cout << "Audio stream checkpoint 7" << std::endl;
+	std::cout << "CHECKPOINT - 4" << std::endl;
 
 	// Tell the audio source which format to use.
 	hr = pMySource->SetFormat(pwfx);
 	EXIT_ON_ERROR(hr);
-	std::cout << "Audio stream checkpoint 8" << std::endl;
+	std::cout << "CHECKPOINT - 5" << std::endl;
 
 	// Get the actual size of the allocated buffer.
 	hr = pAudioClient->GetBufferSize(&bufferFrameCount);
 	EXIT_ON_ERROR(hr);
-	std::cout << "Audio stream checkpoint 9" << std::endl;
+	std::cout << "CHECKPOINT - 6" << std::endl;
 
 	hr = pAudioClient->GetService(
 		IID_IAudioRenderClient,
 		(void **)&pRenderClient);
 	EXIT_ON_ERROR(hr);
-	std::cout << "Audio stream checkpoint 10" << std::endl;
+	std::cout << "CHECKPOINT - 7" << std::endl;
 
 	// Grab the entire buffer for the initial fill operation.
 	hr = pRenderClient->GetBuffer(bufferFrameCount, &pData);
 	EXIT_ON_ERROR(hr);
-	std::cout << "Audio stream checkpoint 11" << std::endl;
+	std::cout << "CHECKPOINT - 8" << std::endl;
 
 	// Load the initial data into the shared buffer.
 	hr = pMySource->LoadData(bufferFrameCount, pData, &flags, wavHeader);
-	std::cout << "Audio stream checkpoint 12" << std::endl;
-
-	std::cout << "got done loading data" << std::endl;
 
 	EXIT_ON_ERROR(hr);
 	hr = pRenderClient->ReleaseBuffer(bufferFrameCount, flags);
-	std::cout << "got done releasing buffer" << std::endl;
+	std::cout << "CHECKPOINT - 9" << std::endl;
 
 	EXIT_ON_ERROR(hr);
+	std::cout << "CHECKPOINT - 10" << std::endl;
 
 	// Calculate the actual duration of the allocated buffer.
 	hnsActualDuration = (double)REFTIMES_PER_SEC *
 						bufferFrameCount / pwfx->nSamplesPerSec;
-	std::cout << "Calculated 'hnsActualDuration': " << hnsActualDuration << std::endl;
 	hr = pAudioClient->Start(); // Start playing.
-	std::cout << "Started playing...." << std::endl;
 
 	EXIT_ON_ERROR(hr);
+	std::cout << "CHECKPOINT - 11" << std::endl;
 
 	// Each loop fills about half of the shared buffer.
 	while (flags != AUDCLNT_BUFFERFLAGS_SILENT && !stopMusicFlag)
@@ -278,19 +271,23 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 		// See how much buffer space is available.
 		hr = pAudioClient->GetCurrentPadding(&numFramesPadding);
 		EXIT_ON_ERROR(hr);
+		std::cout << "CHECKPOINT - 12" << std::endl;
 
 		numFramesAvailable = bufferFrameCount - numFramesPadding;
 
 		// Grab all the available space in the shared buffer.
 		hr = pRenderClient->GetBuffer(numFramesAvailable, &pData);
 		EXIT_ON_ERROR(hr);
+		std::cout << "CHECKPOINT - 13" << std::endl;
 
 		// Get next 1/2-second of data from the audio source.
 		hr = pMySource->LoadData(numFramesAvailable, pData, &flags, wavHeader);
 		EXIT_ON_ERROR(hr);
+		std::cout << "CHECKPOINT - 14" << std::endl;
 
 		hr = pRenderClient->ReleaseBuffer(numFramesAvailable, flags);
 		EXIT_ON_ERROR(hr);
+		std::cout << "CHECKPOINT - 15" << std::endl;
 	}
 
 	if (!stopMusicFlag)

@@ -575,11 +575,11 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData)
     }
 
     // check header data is consistent
-    if (numBytesPerSecond != static_cast<uint32_t> ((numChannels * sampleRate * bitDepth) / 8) || numBytesPerBlock != (numChannels * numBytesPerSample))
+/*     if (numBytesPerSecond != static_cast<uint32_t> ((numChannels * sampleRate * bitDepth) / 8) || numBytesPerBlock != (numChannels * numBytesPerSample))
     {
         reportError("ERROR: the header data in this WAV file seems to be inconsistent");
         return false;
-    }
+    } */
 
     // check bit depth is either 8, 16, 24 or 32 bit
     if (bitDepth != 8 && bitDepth != 16 && bitDepth != 24 && bitDepth != 32)

@@ -54,7 +54,9 @@ namespace audEndpointsComs
 }
 
 std::map<int, char> endpointMap;
+std::mutex mtx;
 LPCWSTR audioEndpointId = NULL;
+std::wstring audioEndpointIdWide;
 
 Napi::Value getAudioEndpoints(const Napi::CallbackInfo &info)
 {
@@ -160,7 +162,15 @@ void stopSong(const Napi::CallbackInfo &info)
 
 void listenToMouseStart(const Napi::CallbackInfo &info)
 {
+    std::cout << "starting mouse listener" << std::endl;
+    stopMouseListener = false;
     startMouseListener(info);
+}
+
+void listenToMouseStop(const Napi::CallbackInfo &info)
+{
+    std::cout << "stopping mouse listener" << std::endl;
+    stopMouseListener = true;
 }
 
 void playClip(const Napi::CallbackInfo &info)
@@ -180,8 +190,11 @@ void setAudioEndpointDeviceId(const Napi::CallbackInfo &info)
 {
     std::string audioEndpointIdString = info[0].ToString().Utf8Value();
     std::cout << "audio endpoint id" << audioEndpointIdString << std::endl;
-    std::wstring audioEndpointIdWide = std::wstring(audioEndpointIdString.begin(), audioEndpointIdString.end());
+    audioEndpointIdWide = std::wstring(audioEndpointIdString.begin(), audioEndpointIdString.end());
     audioEndpointId = audioEndpointIdWide.c_str();
+    /*     std::wstring wstr(audioEndpointId);
+        std::string str(wstr.begin(), wstr.end());
+        std::cout << "audio endpoint id set - " << str << std::endl; */
 }
 
 void synthesizeTextToAudioFile(const Napi::CallbackInfo &info)
@@ -195,7 +208,7 @@ void synthesizeTextToAudioFile(const Napi::CallbackInfo &info)
 void synthesizeTextToVoice(const Napi::CallbackInfo &info)
 {
     std::string textToSynthesize = info[0].ToString().Utf8Value();
-    
+
     Napi::Env env = info.Env();
     if (musicRunning)
     {
@@ -213,6 +226,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "getAudioEndpoints"), Napi::Function::New(env, getAudioEndpoints));
     exports.Set(Napi::String::New(env, "stopSong"), Napi::Function::New(env, stopSong));
     exports.Set(Napi::String::New(env, "startMouseListener"), Napi::Function::New(env, listenToMouseStart));
+    exports.Set(Napi::String::New(env, "stopMouseListener"), Napi::Function::New(env, listenToMouseStop));
     exports.Set(Napi::String::New(env, "playClip"), Napi::Function::New(env, playClip));
     exports.Set(Napi::String::New(env, "setAudioEndpointDeviceId"), Napi::Function::New(env, setAudioEndpointDeviceId));
     exports.Set(Napi::String::New(env, "synthesizeTextToAudioFile"), Napi::Function::New(env, synthesizeTextToAudioFile));

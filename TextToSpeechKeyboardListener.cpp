@@ -90,9 +90,9 @@ int textToSpeechFile(std::string fileName)
 	// Dynamic file creation path
 	std::filesystem::path fullFilePath{"C:/ProgramData/Demut/DEMUT_WAV_CLIPS/" + fileName + ".wav"};
 	// std::string fullFilePath = "C:\\Users\\power\\Desktop\\DEMUT_WAV_CLIPS\\";
-/* 	fullFilePath.append("\\\\");
-	fullFilePath.append(fileName);
-	fullFilePath.append(".wav"); */
+	/* 	fullFilePath.append("\\\\");
+		fullFilePath.append(fileName);
+		fullFilePath.append(".wav"); */
 	// std::wstring wideFullFilePath(fullFilePath.begin(), fullFilePath.end());
 	std::cout << fullFilePath << std::endl;
 	hr = CoInitialize(nullptr);
@@ -267,44 +267,35 @@ int synthesizeVoice(std::string synthText, WAV_HEADER *wavHeader)
 	if (FAILED(::CoInitialize(NULL)))
 		return FALSE;
 
-	std::cout << "initialized\n";
-
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "creating voice\n";
 		hr = cpVoice.CoCreateInstance(CLSID_SpVoice);
 	}
 
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "voice created, initialzing istream\n";
 		hr = cpStream.CoCreateInstance(CLSID_SpStream);
 	}
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "istream created, creating basestream\n";
 		hr = CreateStreamOnHGlobal(NULL, TRUE, &cpBaseStream);
 	}
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "basestream created, setting format\n";
 		hr = SpConvertStreamFormatEnum(SPSF_48kHz16BitStereo, &guidFormat,
 									   &pWavFormatEx);
 	}
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "format set,setting the basestream\n";
 		hr = cpStream->SetBaseStream(cpBaseStream, guidFormat,
 									 pWavFormatEx);
 		// cpBaseStream.Release();
 	}
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "basestream set, setting cpvoice output\n";
 		hr = cpVoice->SetOutput(cpStream, TRUE);
 		if (SUCCEEDED(hr))
 		{
-			std::cout << "output set, speaking\n";
 			SpeechVoiceSpeakFlags my_Spflag = SpeechVoiceSpeakFlags::SVSFlagsAsync; // declaring and initializing Speech Voice Flags
 			hr = cpVoice->Speak(wSynthText.c_str(), my_Spflag, NULL);
 			cpVoice->WaitUntilDone(-1);
@@ -312,8 +303,6 @@ int synthesizeVoice(std::string synthText, WAV_HEADER *wavHeader)
 	}
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "spoken correctly\n";
-
 		/*To verify that the data has been written correctly, uncomment this, you should hear the voice.
 			cpVoice->SetOutput(NULL, FALSE);
 			cpVoice->SpeakStream(cpStream, SPF_DEFAULT, NULL);
@@ -332,7 +321,6 @@ int synthesizeVoice(std::string synthText, WAV_HEADER *wavHeader)
 		pIstream->Stat(&stats, STATFLAG_NONAME);
 
 		ULONG sSize = stats.cbSize.QuadPart; // size of the data to be read
-		std::cout << "size : " << stats.cbSize.QuadPart << std::endl;
 
 		ULONG bytesRead;					   //	this will tell the number of bytes that have been read
 		uint8_t *pBuffer = new uint8_t[sSize]; // buffer to read the data
@@ -356,7 +344,6 @@ int synthesizeVoice(std::string synthText, WAV_HEADER *wavHeader)
 
 		std::vector<uint8_t> buff2;
 		buff2;
-		std::cout << "THIS IS BUFF 2 ---> " << buff2.size() << std::endl;
 
 		for (int buffIndex = 0; buffIndex < bytesRead; buffIndex++)
 		{
@@ -364,9 +351,6 @@ int synthesizeVoice(std::string synthText, WAV_HEADER *wavHeader)
 				continue;
 			buff2.push_back(buff[buffIndex]);
 		}
-		std::cout << "sSize ---> " << sSize << std::endl;
-		std::cout << "ReadBytes ---> " << bytesRead << std::endl;
-		std::cout << "THIS IS BUFF 2 ---> " << buff2.size() << std::endl;
 		// --------------------------------------------------------------------
 		for (int i = 0; i < numSamples; i++)
 		{
@@ -398,6 +382,9 @@ int synthesizeVoice(std::string synthText, WAV_HEADER *wavHeader)
 	}
 
 	// don't forget to release everything
+/* 	std::wstring wstr(audioEndpointId);
+	std::string str(wstr.begin(), wstr.end());
+	std::cout << "audio endpoint id set - " << str << std::endl; */
 	cpStream.Release();
 	cpVoice.Release();
 

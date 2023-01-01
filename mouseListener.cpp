@@ -60,13 +60,19 @@ std::atomic<bool> stopMouseListener = false;
 // at destruction of thread-safe function, taking as arguments the finalizer
 // data and threadsafe-function context.
 void FinalizerCallback(Napi::Env env, void *finalizeData, TsfnContext *context);
-
+// Called from JS to release the TSFN and stop listening to keyboard events
+void Stop()
+{
+    ReleaseTSFN();
+}
 // Window message callback.
 LRESULT CALLBACK EventHandler(HWND, unsigned, WPARAM, LPARAM);
 
+WNDCLASS window_class = {};
+HWND window;
+
 void startMouseListener(const Napi::CallbackInfo &info)
 {
-    std::cout << "Starting...." << std::endl;
     Napi::Env env = info.Env();
 
     // Stop if already running
@@ -95,7 +101,7 @@ void startMouseListener(const Napi::CallbackInfo &info)
     // Create message-only window:
     const char *class_name = "SimpleEngine Class";
 
-    WNDCLASS window_class = {};
+
     window_class.lpfnWndProc = EventHandler;
     window_class.hInstance = instance;
     window_class.lpszClassName = L"SimpleEngineClass";
@@ -103,10 +109,9 @@ void startMouseListener(const Napi::CallbackInfo &info)
     if (!RegisterClass(&window_class))
     {
         std::cout << "register class went poopoo" << std::endl;
-        // return -1;
     }
 
-    HWND window = CreateWindow(L"SimpleEngineClass", L"SimpleEngine", 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0);
+    window = CreateWindow(L"SimpleEngineClass", L"SimpleEngine", 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0);
 
     if (window == nullptr)
     {
@@ -137,13 +142,14 @@ void startMouseListener(const Napi::CallbackInfo &info)
     MSG event;
     bool quit = false;
 
-    while (!stopMouseListener || !quit)
+    while (!stopMouseListener && !quit)
     {
         while (GetMessage(&event, 0, 0, 0))
         {
             if (event.message == WM_QUIT || stopMouseListener)
-            {
+            {   
                 quit = true;
+                ReleaseTSFN();
                 break;
             }
 
@@ -153,17 +159,16 @@ void startMouseListener(const Napi::CallbackInfo &info)
             DispatchMessage(&event);
         }
     } });
-}
-
-// Called from JS to release the TSFN and stop listening to keyboard events
-void Stop(const Napi::CallbackInfo &info)
-{
-    ReleaseTSFN();
+    // Stop();
 }
 
 // Release the TSFN
 void ReleaseTSFN()
 {
+    UnregisterClass(L"SimpleEngineClass", NULL);
+    DestroyWindow(window);
+    stopMouseListener = false;
+    std::cout << "mouse listener release tsfn" << std::endl;
     if (tsfn)
     {
         napi_status status = tsfn.Release();
@@ -244,6 +249,7 @@ LRESULT CALLBACK EventHandler(
 
 void FinalizerCallback(Napi::Env env, void *finalizeData, TsfnContext *context)
 {
+    std::cout << "Finalizer mouse listener" << std::endl;
     DWORD threadId = GetThreadId(context->nativeThread.native_handle());
     if (threadId == 0)
     {
@@ -269,24 +275,34 @@ int CalculateDegreeFromVectors(signed int x, signed int y)
     // VectorOne / VectorTwo
     double vectorLengthDivision = ((double)vectorOneLength) / ((double)vectorTwoLength);
     // Get degree
+    std::cout << "Vector division " << vectorLengthDivision << std::endl;
     double degree = acos(vectorLengthDivision);
+    std::cout << "Degree - " << degree << std::endl;
+    double sector = ((degree * 180 / 3.1415) + 22.5) / 45.0;
+    double ceilSector = floor(sector);
+    std::cout << "(Non Sliver)The Sector is: " << sector << std::endl;
+    std::cout << "(Non Sliver)The ceiling Sector is: " << ceilSector << std::endl;
     if ((x < 0 && y < 0) || (x < 0 && y > 0))
     {
-        double sliverDegree = 360.0 - (180.0 + (degree * 180 / 3.1415));
-        if ((180.0 + sliverDegree + 22.5) > 360)
+        double reversalDegree = (180.0 + (180.0 - (degree * 180 / 3.1415)));
+        std::cout << "Reversaldegree - " << reversalDegree << std::endl;
+        // std::cout << "SliverDegree - " << sliverDegree << std::endl;
+        if (reversalDegree > 360)
         {
-            std::cout << "(360) Sector is: " << ((180.0 + sliverDegree + 22.5) - 360.0) / 45.0 << std::endl;
-            return ceil(((180.0 + sliverDegree + 22.5) - 360.0) / 45.0);
+            // std::cout << "(360) Sector is: " << ((180.0 + sliverDegree + 22.5) - 360.0) / 45.0 << std::endl;
+            double reversalSector = reversalDegree / 45.0;
+            std::cout << "reversalSector - first" << reversalSector << std::endl;
+            return ceil(reversalSector);
         }
         else
         {
-            std::cout << "The Sector is: " << (180.0 + sliverDegree + 22.5) / 45.0 << std::endl;
-            return ceil((180.0 + sliverDegree) / 45.0);
+            // std::cout << "The Sector is: " << (180.0 + sliverDegree + 22.5) / 45.0 << std::endl;
+            double reversalSector = reversalDegree / 45.0;
+            std::cout << "reversalSector - second" << reversalSector << std::endl;
+            return round(reversalSector);
         }
-        // return 180.0 + sliverDegree;
     }
 
-    std::cout << "(Non Sliver)The Sector is: " << ((degree * 180 / 3.1415) + 22.5) / 45.0 << std::endl;
-    return ceil(((degree * 180 / 3.1415) + 22.5) / 45.0);
+    return floor(ceilSector);
     // return degree * 180 / 3.1415;
 }

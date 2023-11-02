@@ -1,6 +1,6 @@
 {
     "name": "sss",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "testing c++ addons for javascript",
     "main": "index.js",
     "author": "Mihkel Riik",

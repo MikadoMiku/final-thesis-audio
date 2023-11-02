@@ -254,6 +254,7 @@ HRESULT PlayAudioStream(WAV_HEADER *wavHeader)
 	EXIT_ON_ERROR(hr);
 	std::cout << "CHECKPOINT - 10" << std::endl;
 
+	
 	// Calculate the actual duration of the allocated buffer.
 	hnsActualDuration = (double)REFTIMES_PER_SEC *
 						bufferFrameCount / pwfx->nSamplesPerSec;

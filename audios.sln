@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.32510.428
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "audios", "audios.vcxproj", "{0403ECE6-FE49-4002-9BA6-7129A992F1E8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testingTTSVOiceChanges", "..\testingTTSVOiceChanges\testingTTSVOiceChanges.vcxproj", "{006B15B1-2362-4265-8591-9DABAD6C0BDD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{0403ECE6-FE49-4002-9BA6-7129A992F1E8}.Release|x64.Build.0 = Release|x64
 		{0403ECE6-FE49-4002-9BA6-7129A992F1E8}.Release|x86.ActiveCfg = Release|Win32
 		{0403ECE6-FE49-4002-9BA6-7129A992F1E8}.Release|x86.Build.0 = Release|Win32
+		{006B15B1-2362-4265-8591-9DABAD6C0BDD}.Debug|x64.ActiveCfg = Debug|x64
+		{006B15B1-2362-4265-8591-9DABAD6C0BDD}.Debug|x64.Build.0 = Debug|x64
+		{006B15B1-2362-4265-8591-9DABAD6C0BDD}.Debug|x86.ActiveCfg = Debug|Win32
+		{006B15B1-2362-4265-8591-9DABAD6C0BDD}.Debug|x86.Build.0 = Debug|Win32
+		{006B15B1-2362-4265-8591-9DABAD6C0BDD}.Release|x64.ActiveCfg = Release|x64
+		{006B15B1-2362-4265-8591-9DABAD6C0BDD}.Release|x64.Build.0 = Release|x64
+		{006B15B1-2362-4265-8591-9DABAD6C0BDD}.Release|x86.ActiveCfg = Release|Win32
+		{006B15B1-2362-4265-8591-9DABAD6C0BDD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

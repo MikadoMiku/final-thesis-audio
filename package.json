@@ -9,7 +9,8 @@
     "gypfile": true,
     "scripts": {
         "preinstall": "npm i node-addon-api",
-        "dev": "rimraf ./build && node-gyp configure && node-gyp build && node index.js"
+        "dev": "rimraf ./build && node-gyp configure && node-gyp build",
+        "devXXX": "rimraf ./build && node-gyp configure && node-gyp build && node index.js"
     },
     "files": [
         "src/**/*",

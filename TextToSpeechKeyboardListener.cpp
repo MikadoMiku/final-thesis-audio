@@ -14,6 +14,7 @@
 #include "ttsFunctionality.h"
 #include <vector>
 #include <iterator>
+#include <shlobj.h>
 #include <filesystem>
 
 enum class Endianness
@@ -87,8 +88,22 @@ int textToSpeechFile(std::string fileName)
 	pcmWaveFormat.wBitsPerSample = 16;
 	pcmWaveFormat.cbSize = 0;
 
+	PWSTR documentsPath;
+	std::string path = "C:/ProgramData/Demut/DEMUT_WAV_CLIPS/";
+	std::filesystem::path fullFilePath{path};
+
+	if (SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &documentsPath) == S_OK)
+	{
+		fullFilePath = documentsPath;
+		fullFilePath /= L"Demut/DEMUT_WAV_CLIPS";
+		fullFilePath /= std::wstring(fileName.begin(), fileName.end()) + L".wav";
+
+		CoTaskMemFree(documentsPath); // Free the allocated memory
+
+		// Now 'fullFilePath' contains the path to the Documents folder with your desired subdirectory and filename.
+	}
 	// Dynamic file creation path
-	std::filesystem::path fullFilePath{"C:/ProgramData/Demut/DEMUT_WAV_CLIPS/" + fileName + ".wav"};
+	// std::filesystem::path fullFilePath{"C:/ProgramData/Demut/DEMUT_WAV_CLIPS/" + fileName + ".wav"};
 	// std::string fullFilePath = "C:\\Users\\power\\Desktop\\DEMUT_WAV_CLIPS\\";
 	/* 	fullFilePath.append("\\\\");
 		fullFilePath.append(fileName);
@@ -382,9 +397,9 @@ int synthesizeVoice(std::string synthText, WAV_HEADER *wavHeader)
 	}
 
 	// don't forget to release everything
-/* 	std::wstring wstr(audioEndpointId);
-	std::string str(wstr.begin(), wstr.end());
-	std::cout << "audio endpoint id set - " << str << std::endl; */
+	/* 	std::wstring wstr(audioEndpointId);
+		std::string str(wstr.begin(), wstr.end());
+		std::cout << "audio endpoint id set - " << str << std::endl; */
 	cpStream.Release();
 	cpVoice.Release();
 

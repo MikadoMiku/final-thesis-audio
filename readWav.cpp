@@ -1,9 +1,11 @@
+#include <windows.h>
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <cstdint>
 #include "readwavHeader.h"
 #include "customHeader.h"
+#include <shlobj.h>
 #include <filesystem>
 using std::cin;
 using std::cout;
@@ -26,13 +28,26 @@ int readFile(WAV_HEADER *wavHeader, string clipName)
 {
 
 	static AudioFile<float> audioFile;
-    
-	
-    // std::filesystem::path path{"ProgramData/DEMUT_WAV_CLIPS"};
+
+	// std::filesystem::path path{"ProgramData/DEMUT_WAV_CLIPS"};
+	// std::string path = "C:/ProgramData/Demut/DEMUT_WAV_CLIPS/";
+	// path.append(clipName + ".wav");
+	PWSTR documentsPath;
 	std::string path = "C:/ProgramData/Demut/DEMUT_WAV_CLIPS/";
-	path.append(clipName + ".wav");
+	std::filesystem::path fullFilePath{path};
+
+	if (SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &documentsPath) == S_OK)
+	{
+		fullFilePath = documentsPath;
+		fullFilePath /= L"Demut/DEMUT_WAV_CLIPS";
+		fullFilePath /= std::wstring(clipName.begin(), clipName.end()) + L".wav";
+
+		CoTaskMemFree(documentsPath); // Free the allocated memory
+
+		// Now 'fullFilePath' contains the path to the Documents folder with your desired subdirectory and filename.
+	}
 	// audioFile.load("C:/Users/power/Downloads/sharks.wav");
-	audioFile.load(path);
+	audioFile.load(fullFilePath.generic_string());
 
 	audioFile.printSummary();
 	int channel = 0;

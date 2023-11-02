@@ -108,7 +108,7 @@ void startMouseListener(const Napi::CallbackInfo &info)
 
     if (!RegisterClass(&window_class))
     {
-        std::cout << "register class went poopoo" << std::endl;
+        std::cout << "registering class went wrong" << std::endl;
     }
 
     window = CreateWindow(L"SimpleEngineClass", L"SimpleEngine", 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0);
@@ -136,12 +136,11 @@ void startMouseListener(const Napi::CallbackInfo &info)
     rid[0].dwFlags = RIDEV_INPUTSINK;
     rid[0].hwndTarget = window;
     RegisterRawInputDevices(rid, 1, sizeof(rid[0]));
-    // End of resgistering.
+    // End of registering.
 
     // Main loop:
     MSG event;
     bool quit = false;
-
     while (!stopMouseListener && !quit)
     {
         while (GetMessage(&event, 0, 0, 0))
@@ -275,34 +274,22 @@ int CalculateDegreeFromVectors(signed int x, signed int y)
     // VectorOne / VectorTwo
     double vectorLengthDivision = ((double)vectorOneLength) / ((double)vectorTwoLength);
     // Get degree
-    std::cout << "Vector division " << vectorLengthDivision << std::endl;
     double degree = acos(vectorLengthDivision);
-    std::cout << "Degree - " << degree << std::endl;
     double sector = ((degree * 180 / 3.1415) + 22.5) / 45.0;
     double ceilSector = floor(sector);
-    std::cout << "(Non Sliver)The Sector is: " << sector << std::endl;
-    std::cout << "(Non Sliver)The ceiling Sector is: " << ceilSector << std::endl;
     if ((x < 0 && y < 0) || (x < 0 && y > 0))
     {
         double reversalDegree = (180.0 + (180.0 - (degree * 180 / 3.1415)));
-        std::cout << "Reversaldegree - " << reversalDegree << std::endl;
-        // std::cout << "SliverDegree - " << sliverDegree << std::endl;
         if (reversalDegree > 360)
         {
-            // std::cout << "(360) Sector is: " << ((180.0 + sliverDegree + 22.5) - 360.0) / 45.0 << std::endl;
             double reversalSector = reversalDegree / 45.0;
-            std::cout << "reversalSector - first" << reversalSector << std::endl;
             return ceil(reversalSector);
         }
         else
         {
-            // std::cout << "The Sector is: " << (180.0 + sliverDegree + 22.5) / 45.0 << std::endl;
             double reversalSector = reversalDegree / 45.0;
-            std::cout << "reversalSector - second" << reversalSector << std::endl;
             return round(reversalSector);
         }
     }
-
     return floor(ceilSector);
-    // return degree * 180 / 3.1415;
 }

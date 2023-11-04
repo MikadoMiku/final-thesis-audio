@@ -24,6 +24,22 @@ void swap_endian32(uint32_t val)
 		  ((val >> 8) & 0x0000ff00) | (val >> 24);
 }
 
+std::filesystem::path getUserDocumentsDirectoryLazyOne()
+{
+	wchar_t profilePath[MAX_PATH];
+	HRESULT hr = SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, profilePath);
+
+	if (SUCCEEDED(hr))
+	{
+		std::filesystem::path documentsPath = profilePath;
+		documentsPath /= L"Documents";
+		return documentsPath;
+	}
+
+	// Fallback in case SHGetFolderPathW fails
+	return L"";
+}
+
 int readFile(WAV_HEADER *wavHeader, string clipName)
 {
 
@@ -32,20 +48,12 @@ int readFile(WAV_HEADER *wavHeader, string clipName)
 	// std::filesystem::path path{"ProgramData/DEMUT_WAV_CLIPS"};
 	// std::string path = "C:/ProgramData/Demut/DEMUT_WAV_CLIPS/";
 	// path.append(clipName + ".wav");
-	PWSTR documentsPath;
-	std::string path = "C:/ProgramData/Demut/DEMUT_WAV_CLIPS/";
-	std::filesystem::path fullFilePath{path};
+	std::filesystem::path fullFilePath = getUserDocumentsDirectoryLazyOne();
+	fullFilePath /= L"Demut";
+	fullFilePath /= L"DEMUT_WAV_CLIPS";
 
-	if (SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &documentsPath) == S_OK)
-	{
-		fullFilePath = documentsPath;
-		fullFilePath /= L"Demut/DEMUT_WAV_CLIPS";
-		fullFilePath /= std::wstring(clipName.begin(), clipName.end()) + L".wav";
-
-		CoTaskMemFree(documentsPath); // Free the allocated memory
-
-		// Now 'fullFilePath' contains the path to the Documents folder with your desired subdirectory and filename.
-	}
+	// Now you can add your clip name to the path as needed
+	fullFilePath /= std::wstring(clipName.begin(), clipName.end()) + L".wav";
 	// audioFile.load("C:/Users/power/Downloads/sharks.wav");
 	audioFile.load(fullFilePath.generic_string());
 

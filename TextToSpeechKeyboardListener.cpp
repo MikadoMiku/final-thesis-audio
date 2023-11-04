@@ -16,6 +16,7 @@
 #include <iterator>
 #include <shlobj.h>
 #include <filesystem>
+#include <fstream> // Include this at the top of your file
 
 enum class Endianness
 {
@@ -70,8 +71,24 @@ void writeOverSynthString(std::string newString)
 	ws.append(newWideString);
 }
 
+std::filesystem::path getUserDocumentsDirectoryLazyTwo()
+{
+	wchar_t profilePath[MAX_PATH];
+	HRESULT hr = SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, profilePath);
+
+	if (SUCCEEDED(hr))
+	{
+		std::filesystem::path documentsPath = profilePath;
+		documentsPath /= L"Documents";
+		return documentsPath;
+	}
+
+	// Fallback in case SHGetFolderPathW fails
+	return L"";
+}
+
 // Speech synthesizer and file creation
-int textToSpeechFile(std::string fileName)
+int textToSpeechFileX(std::string fileName)
 {
 	CComPtr<ISpVoice> cpVoice;
 	CComPtr<ISpStream> cpStream;
@@ -88,20 +105,13 @@ int textToSpeechFile(std::string fileName)
 	pcmWaveFormat.wBitsPerSample = 16;
 	pcmWaveFormat.cbSize = 0;
 
-	PWSTR documentsPath;
-	std::string path = "C:/ProgramData/Demut/DEMUT_WAV_CLIPS/";
-	std::filesystem::path fullFilePath{path};
+	std::filesystem::path fullFilePath = getUserDocumentsDirectoryLazyTwo();
 
-	if (SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &documentsPath) == S_OK)
-	{
-		fullFilePath = documentsPath;
-		fullFilePath /= L"Demut/DEMUT_WAV_CLIPS";
-		fullFilePath /= std::wstring(fileName.begin(), fileName.end()) + L".wav";
+	fullFilePath /= L"Demut/DEMUT_WAV_CLIPS";
+	fullFilePath /= std::wstring(fileName.begin(), fileName.end()) + L".wav";
 
-		CoTaskMemFree(documentsPath); // Free the allocated memory
+	// Now 'fullFilePath' contains the path to the Documents folder with your desired subdirectory and filename.
 
-		// Now 'fullFilePath' contains the path to the Documents folder with your desired subdirectory and filename.
-	}
 	// Dynamic file creation path
 	// std::filesystem::path fullFilePath{"C:/ProgramData/Demut/DEMUT_WAV_CLIPS/" + fileName + ".wav"};
 	// std::string fullFilePath = "C:\\Users\\power\\Desktop\\DEMUT_WAV_CLIPS\\";
@@ -265,6 +275,183 @@ int secondMain()
 	UnhookWindowsHookEx(_hook);
 	std::wcout << "Ending...." << std::endl;
 	return 0;
+}
+
+int textToSpeechFile(std::string fileName)
+{
+	HRESULT hr = S_OK;
+	CComPtr<ISpVoice> cpVoice;
+	CComPtr<ISpStream> cpStream;
+	CComPtr<IStream> cpBaseStream;
+	GUID guidFormat;
+	WAVEFORMATEX *pWavFormatEx = nullptr;
+	std::wstring wSynthText(ws.begin(), ws.end());
+	WAV_HEADER wavHeader;
+
+	if (FAILED(::CoInitialize(NULL)))
+		return FALSE;
+
+	if (SUCCEEDED(hr))
+	{
+		hr = cpVoice.CoCreateInstance(CLSID_SpVoice);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		hr = cpStream.CoCreateInstance(CLSID_SpStream);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = CreateStreamOnHGlobal(NULL, TRUE, &cpBaseStream);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = SpConvertStreamFormatEnum(SPSF_48kHz16BitStereo, &guidFormat,
+									   &pWavFormatEx);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = cpStream->SetBaseStream(cpBaseStream, guidFormat,
+									 pWavFormatEx);
+		// cpBaseStream.Release();
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = cpVoice->SetOutput(cpStream, TRUE);
+		if (SUCCEEDED(hr))
+		{
+			SpeechVoiceSpeakFlags my_Spflag = SpeechVoiceSpeakFlags::SVSFlagsAsync; // declaring and initializing Speech Voice Flags
+			hr = cpVoice->Speak(wSynthText.c_str(), my_Spflag, NULL);
+			cpVoice->WaitUntilDone(-1);
+		}
+	}
+	if (SUCCEEDED(hr))
+	{
+		/*To verify that the data has been written correctly, uncomment this, you should hear the voice.
+			cpVoice->SetOutput(NULL, FALSE);
+			cpVoice->SpeakStream(cpStream, SPF_DEFAULT, NULL);
+			*/
+
+		// After SAPI writes the stream, the stream position is at the end, so we need to set it to the beginning.
+		_LARGE_INTEGER a = {0};
+		hr = cpStream->Seek(a, STREAM_SEEK_SET, NULL);
+
+		// get the base istream from the ispstream
+		IStream *pIstream;
+		cpStream->GetBaseStream(&pIstream);
+
+		// calculate the size that is to be read
+		STATSTG stats;
+		pIstream->Stat(&stats, STATFLAG_NONAME);
+
+		ULONG sSize = stats.cbSize.QuadPart; // size of the data to be read
+
+		ULONG bytesRead;					   //	this will tell the number of bytes that have been read
+		uint8_t *pBuffer = new uint8_t[sSize]; // buffer to read the data
+		std::vector<uint8_t> buff;
+		buff.resize(sSize);
+
+		// read the data into the buffer
+		pIstream->Read(reinterpret_cast<char *>(buff.data()), sSize, &bytesRead);
+
+		wavHeader.pFloatdata.resize(2);
+		wavHeader.pFloatdata[0];
+		wavHeader.pFloatdata[1];
+		int samplesStartIndex = 0;
+		int numSamples = sSize / (2 * 16 / 8);
+		uint16_t numBytesPerSample = static_cast<uint16_t>(16) / 8;
+		uint16_t numBytesPerBlock = static_cast<uint16_t>(pWavFormatEx->nAvgBytesPerSec);
+		int sampleIndex = 0;
+		int random = 0;
+
+		for (int i = 0; i < numSamples; i++)
+		{
+			for (int channel = 0; channel < 2; channel++)
+			{
+				// int sampleIndex = samplesStartIndex + (numBytesPerBlock * i) + channel * numBytesPerSample;
+				// std::cout << "sampleIndex: " << sampleIndex << std::endl;
+
+				int16_t sampleAsInt = twoBytesToInt(buff, sampleIndex, Endianness::LittleEndian);
+				/* 				if (random < 25000)
+								{
+									if (unsigned(sampleAsInt) == 0)
+									{
+										sampleIndex += 4;
+										break;
+									}
+								} */
+				float sample = sixteenBitIntToSample(sampleAsInt);
+
+				wavHeader.pFloatdata[channel].push_back(sample);
+				sampleIndex += 2;
+			}
+			random++;
+		}
+
+		// Assuming 'bytesRead' holds the size of the audio data in bytes
+		// and 'pWavFormatEx' points to a properly filled WAVEFORMATEX structure
+		WAV_HEADER wavHeader;
+
+		// RIFF Chunk Descriptor
+		memcpy(wavHeader.RIFF, "RIFF", 4);	  // RIFF Header Magic header
+		wavHeader.ChunkSize = bytesRead + 36; // Size of the entire file in bytes minus 8 bytes for the two fields not included in this count: ChunkID and ChunkSize
+		memcpy(wavHeader.WAVE, "WAVE", 4);	  // WAVE Header
+
+		// "fmt" sub-chunk
+		memcpy(wavHeader.fmt, "fmt ", 4);						// FMT header
+		wavHeader.Subchunk1Size = 16;							// Size of the fmt chunk, 16 for PCM
+		wavHeader.AudioFormat = 1;								// Audio format, PCM = 1 (i.e. Linear quantization)
+		wavHeader.NumOfChan = pWavFormatEx->nChannels;			// Number of channels, 1 for mono, 2 for stereo
+		wavHeader.SamplesPerSec = pWavFormatEx->nSamplesPerSec; // Sampling Frequency in Hz
+		wavHeader.bytesPerSec = pWavFormatEx->nAvgBytesPerSec;	// Bytes per second
+		wavHeader.blockAlign = pWavFormatEx->nBlockAlign;		// 2=16-bit mono, 4=16-bit stereo
+		wavHeader.bitsPerSample = pWavFormatEx->wBitsPerSample; // Number of bits per sample
+
+		// "data" sub-chunk
+		memcpy(wavHeader.Subchunk2ID, "data", 4); // "data" string
+		wavHeader.Subchunk2Size = bytesRead;	  // Sampled data length
+
+		std::filesystem::path outputPath = getUserDocumentsDirectoryLazyTwo();
+		outputPath /= L"Demut/DEMUT_WAV_CLIPS";
+		outputPath /= std::wstring(fileName.begin(), fileName.end()) + L".wav";
+		std::ofstream outputFile(outputPath, std::ios::binary);
+
+		if (outputFile.is_open())
+		{
+			// Write the WAV header
+			// Populate the header fields based on the audio format and data size
+			// ...
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.RIFF), 4);
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.ChunkSize), sizeof(wavHeader.ChunkSize));
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.WAVE), 4);
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.fmt), 4);
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.Subchunk1Size), sizeof(wavHeader.Subchunk1Size));
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.AudioFormat), sizeof(wavHeader.AudioFormat));
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.NumOfChan), sizeof(wavHeader.NumOfChan));
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.SamplesPerSec), sizeof(wavHeader.SamplesPerSec));
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.bytesPerSec), sizeof(wavHeader.bytesPerSec));
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.blockAlign), sizeof(wavHeader.blockAlign));
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.bitsPerSample), sizeof(wavHeader.bitsPerSample));
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.Subchunk2ID), 4);
+			outputFile.write(reinterpret_cast<const char *>(&wavHeader.Subchunk2Size), sizeof(wavHeader.Subchunk2Size));
+
+			// Write the audio data
+			outputFile.write(reinterpret_cast<const char *>(buff.data()), bytesRead);
+
+			outputFile.close();
+		}
+	}
+
+	// don't forget to release everything
+	/* 	std::wstring wstr(audioEndpointId);
+		std::string str(wstr.begin(), wstr.end());
+		std::cout << "audio endpoint id set - " << str << std::endl; */
+
+	cpStream.Release();
+	cpVoice.Release();
+
+	::CoUninitialize();
+	return TRUE;
 }
 
 // SAPI get raw audio data -- https://github.com/yashasvigirdhar/MS-SAPI-demo/blob/master/DemoApp1/DemoApp1/GetRawAudioData.cpp
